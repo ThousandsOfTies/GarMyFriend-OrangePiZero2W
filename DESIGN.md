@@ -1,5 +1,9 @@
 # 顔アプリと部品代替の境界
 
+実機の構成は`product.json`でアプリ・gar-tools・独立した基板定義の3つを組み合わせます。
+基板資源とOS固有値は`sources/board-orangepi-zero2w/`、Productの配線は`hardware/`に置きます。
+ビルド・起動管理の共通処理とProduct指定の境界は[COMPOSITION.md](docs/COMPOSITION.md)を参照してください。
+
 ## 構成
 
 対象はOrange Pi Zero 2W、ARM64、1GBとGC9A01互換の240×240 RGB565液晶です。実機はArmbian上で専用サービスを導入し、実GPIO入力、SPI書き込みと液晶の顔表示を確認済みです。VMはUbuntu 24.04 x86_64、1GBでLinuxの入出力契約を検証し、ARM CPUの性能や電気特性は再現しません。

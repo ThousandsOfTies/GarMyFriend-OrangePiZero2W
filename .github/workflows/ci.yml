@@ -16,8 +16,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - run: npm run test:composition
       - name: Build the fixed ARM64 target
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           sh infra/orangepi-zero2w/build.sh
+          python3 tools/product.py package --output artifacts/ci-target
+          sh -n artifacts/ci-target/files/app/run artifacts/ci-target/files/app/configure-target artifacts/ci-target/files/app/install

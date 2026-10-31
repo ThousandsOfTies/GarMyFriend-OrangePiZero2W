@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "garmyfriend-orangepi-zero2w",
+  "components": {
+    "application": "sources/gar-my-friend",
+    "tools": "sources/gar-tools",
+    "board": "sources/board-orangepi-zero2w"
+  },
+  "board_profile": "armbian-debian13",
+  "hardware": {
+    "physical": "hardware/orangepi-zero2w",
+    "simulation": "hardware",
+    "spi_miso": false
+  },
+  "build": {
+    "script": "tools/build-native.sh",
+    "directory": "build/composed-arm64",
+    "outputs": [
+      "device-output",
+      "gar_rotary_input"
+    ]
+  },
+  "launch": {
+    "entrypoint": "scripts/run-face.cjs"
+  },
+  "runtime": {
+    "version": "24.22.1",
+    "archive": "node-v24.22.1-linux-arm64.tar.xz",
+    "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-arm64.tar.xz",
+    "sha256": "dbabf7a1cbf947e6059ffad2c27b80041db97dea1e553b62afdee7f13fca336e"
+  },
+  "deployment": {
+    "root": "/opt/garmyfriend",
+    "user": "garmyfriend",
+    "legacy_services": ["garmyfriend.service"]
+  },
+  "payload": [
+    "product.json",
+    "scripts/run-face.cjs",
+    "hardware/orangepi-zero2w",
+    "sources/gar-my-friend/application",
+    "sources/gar-my-friend/firmware",
+    "sources/gar-my-friend/shared"
+  ]
+}

@@ -22,7 +22,11 @@
     "sim:open": "python tools/vm.py open",
     "sim:stop": "python tools/vm.py stop",
     "sim:status": "python tools/vm.py status",
-    "test:vm": "node tests/vm-panel.cjs"
+    "test:vm": "node tests/vm-panel.cjs",
+    "compose": "python tools/product.py describe",
+    "compose:check": "python tools/product.py validate",
+    "compose:package": "python tools/product.py package",
+    "test:composition": "python -m unittest discover -s tests -p test_composition.py -v"
   },
   "devDependencies": {
     "playwright": "1.64.1"

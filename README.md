@@ -1,5 +1,11 @@
 # GarMyFriend-OrangePiZero2W
 
+<!-- board-composition -->
+このProductは **アプリ + gar-tools + 基板定義** の3つをsubmoduleで組み合わせます。
+組み立て指定は[product.json](product.json)、所有範囲と生成物は[構成の説明](docs/COMPOSITION.md)で確認できます。
+`npm run compose`で現在選んでいる部品と版を表示します。
+
+
 丸い顔で表情を伝える、小さなぬいぐるみロボットを作るプロジェクトです。円形ディスプレイを顔に置き、小型ロボットの本体にぬいぐるみのカバーをかぶせます。将来は手足を動かし、脚で歩けるようにしていく構想です。
 
 ![円形ディスプレイの顔を持つぬいぐるみロボットの完成イメージ。右側に内部の小型ロボットと取り外したカバー、下側に表情の例を示す。](docs/images/garmyfriend-concept.png)
@@ -47,7 +53,7 @@ npm run vm:stop     # 専用VMを終了
 
 Cloudflare Quick TunnelのURLは再発行すると変わります。開発用の模擬部品を公開しています。
 
-実機では専用の `garmyfriend` サービスで同じ顔アプリを自動起動します。実機用GPIO/SPIは `hardware/orangepi-zero2w/` から読み、WebPanelを必要としません。[実機の導入・確認手順](infra/orangepi-zero2w/README.md)
+従来の実機導入では専用の `garmyfriend` サービスで同じ顔アプリを自動起動します。新構成では起動ファイルを共有処理から生成します。実機用GPIO/SPIは `hardware/orangepi-zero2w/` から読み、WebPanelを必要としません。[実機の導入・確認手順](infra/orangepi-zero2w/README.md)
 
 ## ソースの役割
 
@@ -61,7 +67,7 @@ Cloudflare Quick TunnelのURLは再発行すると変わります。開発用の
 | `sources/gar-my-friend/shared/`、`sources/gar-my-friend/firmware/` | 表情データとC++描画コア |
 | `scripts/run-face.cjs` | ProductのCSVとバイナリーを共通アプリへ渡す起動口 |
 | `infra/virtualbox/`、`tools/vm.py` | 専用VMとサービスの構築・配布 |
-| `infra/orangepi-zero2w/` | 実機のARM64ビルド、SPI有効化、専用ユーザーでの自動起動 |
+| `infra/orangepi-zero2w/` | 共通の構成エンジンへの互換入口。基板データは独立submodule |
 
 クローンは `git clone --recurse-submodules https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W.git`。実行アプリはNode.js 18以上とLinuxのGPIO v2・SPIを利用します。実機ではNode.js 24.22.1 ARM64を使用し、GPIO/SPIの割り当て、ノブ入力、液晶の顔表示を確認済みです。
 
