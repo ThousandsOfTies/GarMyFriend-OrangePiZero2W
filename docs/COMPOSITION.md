@@ -14,7 +14,7 @@
 ## 手元で見る
 
 ```sh
-git clone --recurse-submodules https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W.git
+git clone --recurse-submodules --branch feature/board-composition https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W.git
 cd GarMyFriend-OrangePiZero2W
 python tools/product.py describe
 python tools/product.py validate
@@ -22,6 +22,8 @@ python tools/product.py validate
 
 `describe`は実際のsubmoduleのコミット、OS、起動方式、配線ファイル、起動指定を表示します。
 `validate`はProductのGPIO/SPI割当を選択した基板プロファイルと照合します。どちらも実機にアクセスしません。
+現在の変更は[ドラフトPR #2](https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W/pull/2)にあります。
+上のコマンドは、まだmainへマージしていない構成変更のブランチを選びます。
 
 ## ビルドと生成物
 
