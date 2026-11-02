@@ -27,6 +27,15 @@ async function exercise(page,url,{native=false}={}){
   await page.waitForFunction(()=>!document.querySelector('#live-send').disabled);
   assert.equal(await page.inputValue('#live-key'),'');
   await page.waitForFunction(()=>window.testLive.sent.some(value=>value.realtimeInput?.audio));
+  await page.waitForFunction(()=>document.querySelector('#live-input-status').textContent.includes('Geminiへ送信'));
+  await page.locator('#speakerphone').getByRole('button',{name:'マイクをミュート',exact:true}).click();
+  const mutedCount=await page.evaluate(()=>window.testLive.sent.filter(value=>value.realtimeInput?.audio).length);
+  await page.waitForTimeout(350);
+  assert.equal(await page.evaluate(()=>window.testLive.sent.filter(value=>value.realtimeInput?.audio).length),mutedCount);
+  assert.match(await page.locator('#live-status').innerText(),/ミュート中/);
+  assert.ok(await page.evaluate(()=>window.testLive.sent.some(value=>value.realtimeInput?.audioStreamEnd)));
+  await page.locator('#speakerphone').getByRole('button',{name:'マイクのミュートを解除',exact:true}).click();
+  await page.waitForFunction(before=>window.testLive.sent.filter(value=>value.realtimeInput?.audio).length>before,mutedCount);
   await page.waitForFunction(()=>document.querySelector('#live-transcript').textContent.includes('こんにちは'));
   await page.evaluate(()=>{
     const data=btoa(String.fromCharCode(...new Uint8Array(24000)));

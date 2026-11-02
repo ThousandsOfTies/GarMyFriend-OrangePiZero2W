@@ -26,6 +26,7 @@
       <details class="live-settings"><summary>接続設定</summary><label class="live-label">モデル<input id="live-model" value="gemini-3.8-live" spellcheck="false"></label><label class="live-label">声<input id="live-voice" value="Puck" spellcheck="false"></label></details>
       <div class="live-buttons"><button id="live-start" disabled>会話を始める</button><button id="live-stop" disabled>停止</button></div>
       <p id="live-status" role="status">アプリとの接続を確認中</p>
+      <p id="live-input-status" class="section-note">音声入力：停止中</p>
       <form id="live-text-form"><label for="live-text">文字でも話しかける</label><div><input id="live-text" maxlength="2000" disabled placeholder="伏せてみて"><button id="live-send" disabled>送信</button></div></form>
       <ol id="live-transcript" aria-label="今回の会話" role="log"></ol>
       <p id="live-tool" class="section-note"></p>
