@@ -28,6 +28,14 @@ async function exercise(page,url,{native=false}={}){
   assert.equal(await page.inputValue('#live-key'),'');
   await page.waitForFunction(()=>window.testLive.sent.some(value=>value.realtimeInput?.audio));
   await page.waitForFunction(()=>document.querySelector('#live-transcript').textContent.includes('こんにちは'));
+  await page.evaluate(()=>{
+    const data=btoa(String.fromCharCode(...new Uint8Array(24000)));
+    for(let i=0;i<16;i++)window.testLive.socket.deliver({serverContent:{modelTurn:{parts:[{inlineData:{data,mimeType:'audio/pcm;rate=24000'}}]}}});
+    window.testLive.socket.deliver({serverContent:{turnComplete:true}});
+  });
+  await page.waitForFunction(()=>document.querySelector('#speakerphone').nextTime-document.querySelector('#speakerphone').context.currentTime>5);
+  assert.equal(await page.locator('#live-send').isEnabled(),true,'Audio generated faster than playback must not disconnect the conversation');
+  assert.equal(await page.locator('#speakerphone').evaluate(p=>p.playing),true,'Generation completion must not truncate queued playback');
   await page.evaluate(()=>window.testLive.socket.deliver({toolCall:{functionCalls:[{id:'emotion-1',name:'change_emotion',args:{emotion:'happy'}}]}}));
   await page.waitForFunction(()=>window.testLive.sent.some(value=>value.toolResponse?.functionResponses.some(r=>r.id==='emotion-1')));
   await page.evaluate(()=>window.testLive.socket.deliver({toolCall:{functionCalls:[{id:'body-1',name:'move_body',args:{mode:'lie'}}]}}));
@@ -37,8 +45,11 @@ async function exercise(page,url,{native=false}={}){
   assert.equal(result.response.result.status,'completed');assert.equal(result.response.result.pwm,'off');
   assert.ok(requests.every(value=>!value.includes('fixture-key-not-real')),'API key must never enter local HTTP commands');
   await page.evaluate(()=>window.testLive.socket.deliver({serverContent:{interrupted:true}}));
+  assert.equal(await page.locator('#speakerphone').evaluate(p=>p.playing),false);
   await page.click('#live-stop');await page.waitForFunction(()=>!document.querySelector('#speakerphone').active);
   assert.equal(await page.locator('#live-send').isDisabled(),true);assert.deepEqual(failures,[]);
+  await page.waitForTimeout(2200);
+  assert.equal(await page.locator('#live-status').innerText(),'停止しました','Polling must not erase the stop reason');
   for(const width of [320,760,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
 }
 
@@ -64,6 +75,20 @@ async function delayedPreviousReply(page){
   }finally{await page.unroute('**/api/live',intercept);}
 }
 
+async function microphoneDenied(page){
+  await page.evaluate(()=>{
+    window.originalGetUserMedia=navigator.mediaDevices.getUserMedia;
+    navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('Permission denied by system','NotAllowedError');};
+  });
+  try{
+    await page.fill('#live-key','fixture-key-not-real');await page.click('#live-start');
+    await page.waitForFunction(()=>!document.querySelector('#live-start').disabled);
+    await page.waitForTimeout(2200);
+    assert.match(await page.locator('#live-status').innerText(),/マイクへのアクセスが拒否/);
+    assert.equal(await page.inputValue('#live-key'),'fixture-key-not-real','A failed microphone preflight must not discard the entered key');
+  }finally{await page.evaluate(()=>{navigator.mediaDevices.getUserMedia=window.originalGetUserMedia;delete window.originalGetUserMedia;});}
+}
+
 (async()=>{
   let server;
   const friend=new FriendRuntime({servo:{async perform(){return true;}}});
@@ -75,7 +100,7 @@ async function delayedPreviousReply(page){
   try{
     const page=await browser.newPage({viewport:{width:1100,height:900}});
     await exercise(page,url,{native:!!process.env.GAR_PANEL_URL});
-    if(!process.env.GAR_PANEL_URL)await delayedPreviousReply(page);
+    if(!process.env.GAR_PANEL_URL){await microphoneDenied(page);await delayedPreviousReply(page);}
     fs.mkdirSync('artifacts',{recursive:true});await page.setViewportSize({width:1100,height:900});await page.screenshot({path:process.env.GAR_PANEL_URL?'artifacts/live-vm.png':'artifacts/live-fixture.png',fullPage:true});
     console.log('PASS: fake Gemini session + browser microphone/speaker + App expression/body tools + stop + private API key + responsive layout');
   }finally{await browser.close();if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}}

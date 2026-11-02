@@ -6,33 +6,33 @@ const device=document.querySelector('#speakerphone'),start=document.querySelecto
 const key=document.querySelector('#live-key'),model=document.querySelector('#live-model'),voice=document.querySelector('#live-voice');
 const status=document.querySelector('#live-status'),transcript=document.querySelector('#live-transcript'),tool=document.querySelector('#live-tool');
 const text=document.querySelector('#live-text'),send=document.querySelector('#live-send'),pose=document.querySelector('#start-pose');
-let client,session=null,generation=0,heartbeat,pollTimer,busy=false,ready=false,disposed=false,lastLine=null,lastRole=null;
+let client,session=null,generation=0,heartbeat,pollTimer,busy=false,ready=false,disposed=false,lastLine=null,lastRole=null,idleMessage='';
 async function command(value){
   const response=await fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value),signal:AbortSignal.timeout(value.action==='tool'?38000:4000)});
   const result=await response.json();if(!response.ok)throw new Error(result.error||'アプリに接続できません');return result;
 }
 function controls(){start.disabled=busy||!ready;stop.disabled=!busy;key.disabled=busy;model.disabled=busy;voice.disabled=busy;text.disabled=send.disabled=!client?.ready;}
 async function poll(){
-  try{const state=await(await fetch('/api/state',{signal:AbortSignal.timeout(2500)})).json();ready=state.live?.ready===true;if(!busy)status.textContent=ready?'APIキーを入力して会話を始められます':'VM内の共通アプリを待っています';}
-  catch{ready=false;if(!busy)status.textContent='WebPanelとの接続を確認中';}
+  try{const state=await(await fetch('/api/state',{signal:AbortSignal.timeout(2500)})).json();ready=state.live?.ready===true;if(!busy)status.textContent=idleMessage||(ready?'APIキーを入力して会話を始められます':'VM内の共通アプリを待っています');}
+  catch{ready=false;if(!busy)status.textContent=idleMessage||'WebPanelとの接続を確認中';}
   controls();if(!disposed)pollTimer=setTimeout(poll,2000);
 }
 async function end(message='停止しました'){
   ++generation;const previous=session;session=null;clearInterval(heartbeat);client?.stop();client=null;
   controls();status.textContent='停止しています';
   await device.stop();if(previous)await command({action:'close',session:previous}).catch(()=>{});
-  busy=false;status.textContent=message;controls();
+  busy=false;idleMessage=message;status.textContent=message;controls();
 }
 function append({role,text:words}){
   if(lastRole!==role||!lastLine){lastLine=document.createElement('li');lastLine.dataset.role=role;lastLine.textContent=role==='user'?'あなた：':'相棒：';transcript.append(lastLine);lastRole=role;while(transcript.children.length>12)transcript.firstElementChild.remove();}
   lastLine.textContent=(lastLine.textContent+words).slice(0,4000);transcript.scrollTop=transcript.scrollHeight;
 }
 start.addEventListener('click',async()=>{
-  if(busy)return;if(!key.value.trim()){status.textContent='Gemini APIキーを入力してください';key.focus();return;}
-  const apiKey=key.value.trim();key.value='';busy=true;const current=++generation;controls();status.textContent='マイクとスピーカーを準備中';
+  if(busy)return;if(!key.value.trim()){idleMessage='Gemini APIキーを入力してください';status.textContent=idleMessage;key.focus();return;}
+  const apiKey=key.value.trim();idleMessage='';busy=true;const current=++generation;controls();status.textContent='マイクとスピーカーを準備中';
   transcript.replaceChildren();lastLine=lastRole=null;tool.textContent='';
   try{
-    await device.start();if(current!==generation)return;
+    await device.start();if(current!==generation)return;key.value='';
     const opened=await command({action:'open'});
     if(current!==generation){await command({action:'close',session:opened.session});return;}
     session=opened.session;const activeSession=session;
@@ -54,7 +54,7 @@ start.addEventListener('click',async()=>{
     await client.connect({apiKey,model:model.value.trim()||opened.config.model,voice:voice.value.trim()||opened.config.voice,instruction:opened.config.instruction,tools:opened.config.tools});
     if(current!==generation)return;status.textContent='接続しました。話しかけてください';controls();
     client.text('こんにちは。短く自己紹介して挨拶してください。');
-  }catch(error){if(current===generation)await end(error.message||'会話を開始できませんでした');}
+  }catch(error){if(current===generation)await end(error.name==='NotAllowedError'?'マイクへのアクセスが拒否されました。ブラウザとWindowsのマイク許可を確認してください。内蔵ブラウザで使えない場合はEdgeで開いてください。':error.message||'会話を開始できませんでした');}
 });
 stop.addEventListener('click',()=>end());
 device.addEventListener('gar-audio-input',({detail})=>client?.sendAudio(detail.bytes));

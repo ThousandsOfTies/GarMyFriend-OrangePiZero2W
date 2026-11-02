@@ -23,6 +23,18 @@ const assert=require('node:assert/strict');
     await page.locator('[data-tone=second]').click();await page.waitForFunction(()=>document.querySelector('#second').playing);
     assert.equal(await page.locator('#first').evaluate(p=>p.playing),false);
     await page.waitForFunction(()=>!document.querySelector('#second').playing);
+    const queued=await page.locator('#second').evaluate(part=>{
+      const seconds=2,bytes=new Uint8Array(24000*2*seconds);
+      for(let i=0;i<6;i++)part.playPcm(bytes);
+      const secondsAhead=part.nextTime-part.context.currentTime;
+      let limited=false;
+      try{for(let i=0;i<30;i++)part.playPcm(bytes);}catch(error){limited=error.message.includes('60秒');}
+      part.stopPlayback();
+      return {secondsAhead,limited,playing:part.playing,sources:part.sources.size,active:part.active};
+    });
+    assert.ok(queued.secondsAhead>10,'A burst containing a normal long answer must queue instead of failing after four seconds');
+    assert.equal(queued.limited,true,'Playback memory must remain bounded');
+    assert.deepEqual({...queued,secondsAhead:0},{secondsAhead:0,limited:true,playing:false,sources:0,active:true});
     await page.locator('[data-stop=first]').click();await page.waitForFunction(()=>!document.querySelector('#first').active);
     assert.equal(await page.locator('#second').evaluate(p=>p.active),true);
     await page.locator('[data-stop=second]').click();assert.deepEqual(errors,[]);
