@@ -94,4 +94,4 @@ PCA9685と4サーボの制御アプリを依存submoduleとして再利用し、
 操作・調整方法と実機で未確認の範囲は[身体モード](docs/BODY_CONTROL.md)を参照してください。
 追加機能は初期状態では無効です。配線・音声機器の準備と有効化は[統合手順](docs/SERVO_AND_SPEECH.md)を参照してください。
 USBマイク・スピーカーは[音声の設定・確認手順](docs/USB_AUDIO.md)に沿って、機器一覧、短時間録音、WAV再生、日本語発話を確認できます。実機でのUSB音声は機器到着後に検証します。
-[USBネットワーク＋Windowsの通信共有](docs/USB_NETWORK.md)は実機設定済みで、Orange PiからDNS・HTTPS接続を確認しました。Gemini LiveはWebPanelから使用できます。実機のUSB音声との接続は次の段階です。
+[USBネットワーク＋Windowsの通信共有](docs/USB_NETWORK.md)は実機設定済みで、Orange PiからDNS・HTTPS接続を確認しました。Gemini LiveはWebPanelで動作確認済みです。実機向けにも `node scripts/live.cjs check` / `start` を追加し、USB音声・顔・口パクを同じアプリに接続しました。[実機会話の準備・操作](docs/NATIVE_LIVE.md)に沿って、機器到着後にUSB認識と実音声を確認します。

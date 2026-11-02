@@ -19,7 +19,7 @@ jobs:
       - name: Check independent audio and Gemini Live protocol
         run: node --test sources/gar-tools/web-simulator/tests/audio-live.test.mjs
       - name: Check shared ALSA adapter without physical audio devices
-        run: node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.test.cjs tests/linux-audio.cjs
+        run: node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.test.cjs tests/linux-audio.cjs tests/native-live.cjs
       - name: Check native servo limits and interruption
         run: make -C sources/gar-my-friend/dependencies/gar-servo-pet check
       - run: npm run test:composition

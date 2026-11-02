@@ -15,6 +15,13 @@ belong in gar-my-friend. Product adapters relay tools to the running VM applicat
 over its optional local control socket. Render only actual SPI pixels and native
 I2C output. API keys stay in browser session memory; never persist or log them.
 
+Physical USB conversation is separately opt-in via scripts/live.cjs. The common
+application owns the session and invokes the same semantic tools; gar-tools owns
+raw ALSA streams and the DOM-independent Gemini protocol. No physical audio is
+started by the WebPanel. GEMINI_API_KEY is supplied at launch, removed from child
+process environments, and never saved/logged. Body tools require explicit --body
+and a confirmed --from pose; default conversation is face/audio only.
+
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
 `scripts/run-face.cjs`; it must not choose expressions. The face application reads

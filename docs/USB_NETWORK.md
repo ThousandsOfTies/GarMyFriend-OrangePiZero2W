@@ -108,4 +108,5 @@ timedatectl show -p NTPSynchronized
 - USB複合デバイスservice、既存の顔service、時刻同期serviceはactive。
 
 Gemini Liveは先に[WebPanel](LIVE_PANEL.md)で会話できるようにしました。
-実機側のAPIキー設定・USB音声機器との接続は次の段階です。
+実機側のAPIキー設定とUSB音声会話は[実機会話の手順](NATIVE_LIVE.md)に追加しました。
+USB機器を使った実際の会話は、機器到着後に確認します。
