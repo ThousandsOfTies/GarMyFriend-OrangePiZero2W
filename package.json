@@ -2,7 +2,7 @@
   "name": "gar-my-friend-orangepi-zero2w",
   "version": "0.2.0",
   "private": true,
-  "description": "Orange Pi Zero 2W Product binding and two-part Linux simulator for gar-my-friend",
+  "description": "Orange Pi Zero 2W Product binding and Linux display/servo simulator for gar-my-friend",
   "engines": {
     "node": ">=18"
   },
@@ -23,7 +23,7 @@
     "sim:open": "python tools/vm.py open",
     "sim:stop": "python tools/vm.py stop",
     "sim:status": "python tools/vm.py status",
-    "test:vm": "node tests/vm-panel.cjs",
+    "test:vm": "node tests/vm-body.cjs",
     "compose": "python tools/product.py describe",
     "compose:check": "python tools/product.py validate",
     "compose:package": "python tools/product.py package",

@@ -2,8 +2,9 @@
 
 GarServoPetで使用したPCA9685＋SG90×4と同じ脚・ホーン・チャンネルを使います。
 追加のI2C配線は[SERVO_AND_SPEECH.md](SERVO_AND_SPEECH.md)を参照してください。
-現在のWebPanelは液晶とノブの2部品のままです。身体の操作は独立したCLIと
-共通アプリのAPIで行い、WebPanelの稼働を必要としません。
+WebPanelは液晶・PCA9685・SG90×4を並べ、5モードを仮想I2Cで試せます。
+ロータリーは画面に置きません。[シミュレータの起動・操作](../SIMULATOR.md)
+実機の身体操作は独立したCLIと共通アプリのAPIで行い、WebPanelの稼働を必要としません。
 
 ## 5つのモード
 

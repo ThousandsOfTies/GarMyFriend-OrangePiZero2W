@@ -26,7 +26,7 @@ def changed(previous):
         time.sleep(.1)
     raise AssertionError('Application did not produce a new SPI frame')
 
-for name in ['spidev0.0','gpiochip0']:
+for name in ['spidev0.0','gpiochip0','i2c-10']:
     assert stat.S_ISCHR(Path('/dev',name).stat().st_mode)
 assert not Path('/dev/i2c-1').exists(),'Unused actuator device is still running'
 pid=int(service('show','garmyfriend','-p','MainPID','--value'))
@@ -60,4 +60,4 @@ for _ in range(40):
     except OSError:pass
     time.sleep(.2)
 assert get('http://127.0.0.1:8773/health')['ok']
-print('PASS: two physical devices; no face decision in panel/bridge; application operates with panel stopped')
+print('PASS: virtual SPI/GPIO/I2C; no face decision in panel/bridge; application operates with panel stopped')

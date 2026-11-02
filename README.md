@@ -18,7 +18,7 @@
 
 現在は、その顔の部分から作っています。Orange Pi Zero 2W（H618・ARM64・RAM 1GB）にGC9A01互換の円形ディスプレイとKY-040ロータリーエンコーダーをつなぎ、実機で動作確認済みです。目・鼻・口・頬を幾何図形で描き、ノブの回転で8つの表情を切り替えます。押すとまばたきします。
 
-開発時は同じ顔アプリをVirtualBoxのLinux上で動かし、HTTPSのWebPanelを実物の部品の代わりに使います。WebPanelに置くのは、顔のディスプレイと表情を変えるノブの2点です。
+開発時は共通の顔アプリとサーボ制御をVirtualBoxのLinux上で動かし、WebPanelを実物の部品の代わりに使います。円形液晶・PCA9685・4サーボを並べ、前進・後進・停止・伏せ・立ち上がりを試せます。ロータリーの接続は不要です。
 
 手持ちノブの型番は **[KY-040](hardware/modules/KY-040.md)**。液晶は **[YMS PARTS 1.28インチ円形IPS・7ピン](hardware/modules/round-lcd-7pin.md)**（商品モデル番号 YMS-circlelcd-pinari）として記録しています。[実機の配線表](hardware/WIRING.md)はVMの仮想GPIO番号と区別して管理します。
 
@@ -43,7 +43,8 @@ npm run vm:start
 npm run vm:open
 ```
 
-URLは `.gar/vm/panel.json` に保存します。トンネルやVMの再起動後は `npm run vm:publish` で開発用HTTPS URLを発行し直してください。
+通常はローカルの http://127.0.0.1:8773/ を開き、URLは `.gar/vm/panel.json` に保存します。
+`vm:open` がVMへのSSH転送を準備します。外部向けHTTPSが必要な場合だけ `npm run vm:publish` を使います。
 
 ```powershell
 npm run vm:deploy   # 変更を転送して再ビルド
@@ -61,7 +62,7 @@ Cloudflare Quick TunnelのURLは再発行すると変わります。開発用の
 | --- | --- |
 | `sources/gar-my-friend/application/` | 表情の選択、アニメーション、GPIO入力、SPIへの描画出力。HTTPやWebPanelに依存しない |
 | `simulation/` | 仮想GPIOへの入力と、ドライバが受け取った画素の中継。表情の意味を持たない |
-| `simulator/` | 共有の液晶・ロータリー部品だけを配置するWebPanel |
+| `simulator/` | 共有の液晶・PCA9685・SG90とProductの5モードを接続するWebPanel |
 | `hardware/` | 部品・物理配線と、VM / Orange PiそれぞれのGPIO・SPI割り当て |
 | `sources/gar-tools/` | 共有Web Components、GPIO入力、CUSEドライバ、汎用Bridgeのsubmodule |
 | `sources/gar-my-friend/shared/`、`sources/gar-my-friend/firmware/` | 表情データとC++描画コア |
@@ -79,7 +80,9 @@ npm test
 npm run test:vm
 ```
 
-ローカル試験では表情処理、Bridgeが表情を判断しないこと、2部品の画面と入出力を確認します。VM試験は実際の仮想GPIO・SPIと画面の画素一致を確認します。VM内の `python3 -B tests/vm-parts.py` は、顔アプリを止めたときにBridgeだけでは表情を変えられず、WebPanelを止めてもアプリが動くことを確認します。
+ローカル試験では表情・身体モード、Bridgeが表情を判断しないこと、部品の表示と入力を確認します。
+VM試験は実際のC制御・仮想I2Cによる5モードと停止、SPI画素の一致を確認します。
+VM内の `python3 -B tests/vm-parts.py` は、顔アプリを止めたときにBridgeだけでは表情を変えられず、WebPanelを止めてもアプリが動くことを確認します。
 
 [操作・再構築手順](SIMULATOR.md) / [設計](DESIGN.md)
 

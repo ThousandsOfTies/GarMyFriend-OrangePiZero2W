@@ -1,5 +1,5 @@
 [Unit]
-Description=GarMyFriend display and rotary replacement panel
+Description=GarMyFriend display and virtual servo panel
 After=network-online.target garmyfriend-devices.service
 Requires=garmyfriend-devices.service
 Wants=network-online.target

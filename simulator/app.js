@@ -1,36 +1,60 @@
 import '/gar-components/display.mjs';
-import '/gar-components/rotary.mjs';
+import '/gar-components/pca9685.js';
+import '/gar-components/sg90.js';
 
-// Physical-part adapter only: display received pixels and forward knob actions.
-const screen=document.querySelector('#screen'),knob=document.querySelector('#rotary'),status=document.querySelector('#status');
-let disposed=false,timer,frameId=null,connected=false,queue=Promise.resolve();
+// Product adapter: relay commands, display actual driver pixels/PWM, no gait code.
+const screen=document.querySelector('#screen'),status=document.querySelector('#status');
+const controller=document.querySelector('#pca9685-1'),bodyStatus=document.querySelector('#body-status');
+const pose=document.querySelector('#start-pose'),buttons=[...document.querySelectorAll('[data-mode]')];
+const names={forward:'前進',backward:'後進',stop:'停止',lie:'伏せ',stand:'立ち上がり'};
+let disposed=false,timer,frameId=null,connected=false,sending=false,lastRunning=null;
 async function request(url,options={}){
-  const response=await fetch(url,{cache:'no-store',...options,signal:AbortSignal.timeout(2500)});
-  if(!response.ok)throw new Error('Part connection unavailable');
+  const response=await fetch(url,{cache:'no-store',...options,signal:AbortSignal.timeout(8000)});
+  if(!response.ok){const error=await response.json().catch(()=>({}));throw new Error(error.error||'部品に接続できません');}
   return response;
 }
-function connection(ready){connected=ready;knob.disabled=!ready;status.hidden=ready;status.textContent='部品との接続を確認中';}
+function connection(ready){connected=ready;status.hidden=ready;status.textContent='液晶ドライバーとの接続を確認中';}
+function updateBody(state){
+  const body=state.body,ready=body?.ready&&state.pwm?.ready;
+  for(const button of buttons)button.disabled=!ready||(button.dataset.mode!=='stop'&&(body.running||body.stopping||sending));
+  pose.disabled=Boolean(body?.running||body?.stopping||sending);
+  bodyStatus.textContent=body?.error||(!ready?'サーボとの接続を確認中':body.stopping?'停止しています':body.running?`${names[body.mode]} · 実行中`:`${names[body.mode]} · PWM OFF`);
+  if(lastRunning&&!body?.running&&!body?.error){if(['stand','forward','backward'].includes(body.mode))pose.value='stand';else if(body.mode==='lie')pose.value='lie';}
+  lastRunning=Boolean(body?.running);
+  if(state.pwm?.ready&&state.pwm.controller)controller.update({type:'pca9685',...state.pwm.controller});
+  else controller.update({type:'init',state:null});
+}
 async function poll(){
   try{
     const state=await(await request('/api/state')).json();
-    connection(state.io.displayReady&&state.rotary.ready);
-    if(knob.value!==state.rotary.counter)knob.value=state.rotary.counter;
+    connection(state.io.displayReady);
+    updateBody(state);
     if(state.io.displayReady&&state.io.frameId!==frameId){
       const response=await request('/api/io/frame'),bytes=new Uint8Array(await response.arrayBuffer());
       if(bytes.length!==115200)throw new Error('Invalid display frame');
       screen.writeFrame(bytes,{littleEndian:false});frameId=response.headers.get('ETag')||state.io.frameId;
     }
-  }catch{connection(false);}
+  }catch{connection(false);for(const button of buttons)button.disabled=true;controller.update({type:'init',state:null});bodyStatus.textContent='サーボとの接続を確認中';}
   finally{if(!disposed)timer=setTimeout(poll,connected?(document.hidden?500:80):1000);}
 }
-knob.addEventListener('gar-rotary-input',({detail})=>{
-  if(!connected)return;
-  const input=detail.type==='rotate'?{action:'rotate',direction:detail.direction}:{action:'press'};
-  queue=queue.then(async()=>{
-    if(disposed)return;
-    try{await request('/api/rotary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});}
-    catch{connection(false);}
-  });
+for(const button of buttons)button.addEventListener('click',async()=>{
+  const mode=button.dataset.mode;
+  if(sending&&mode!=='stop')return;
+  sending=true;
+  for(const other of buttons)if(other.dataset.mode!=='stop')other.disabled=true;
+  try{await request('/api/body',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(mode==='stop'?{mode}:{mode,from:pose.value})});}
+  catch(error){bodyStatus.textContent=error.message;}
+  finally{sending=false;}
 });
+async function configure(){
+  try{
+    const {servos}=await(await request('/api/body/config')).json();
+    for(const servo of servos){const element=document.getElementById(servo.name);if(!element)continue;
+      element.setAttribute('channel',servo.channel);element.setAttribute('min-pulse-us',servo.minPulseUs);element.setAttribute('max-pulse-us',servo.maxPulseUs);
+      const labels={'front-left':'左前','front-right':'右前','rear-left':'左後ろ','rear-right':'右後ろ'};
+      element.parentElement.querySelector('h3').textContent=`${labels[servo.role]||servo.role} · CH${servo.channel}`;
+    }
+  }catch(error){bodyStatus.textContent=error.message;}
+}
 window.addEventListener('pagehide',()=>{disposed=true;clearTimeout(timer);});
-poll();
+configure().then(poll);

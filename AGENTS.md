@@ -1,9 +1,12 @@
 # GarMyFriend-OrangePiZero2W scope
 
-The user's current WebPanel scope is exactly two physical substitutes: the
-GC9A01 face display and a rotary encoder. Preserve the shared parts' appearance
-and basic input. Do not add dashboards, sensor controls, servos, scenarios,
-record/replay, direct expression selectors or execution controls to this scope.
+The user's current WebPanel scope is the GC9A01 face display, PCA9685 and four
+SG90 servos, with Product-level forward/backward/stop/lie/stand controls. The
+rotary encoder is not required in the current composition. Preserve the shared
+parts' appearance. Do not add unrelated dashboards, sensors, scenarios,
+record/replay or direct expression selectors. Body commands invoke the actual
+native controller against virtual I2C in the dedicated Linux simulator; the
+panel must never route these commands to a physical board.
 
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
