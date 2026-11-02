@@ -1,0 +1,3 @@
+kind,enabled,device,dictionary,voice,speed,hold_ms,stop_file
+servo,0,,,,,250,/run/garmyfriend-orangepi-zero2w/servo.stop
+speech,0,default,/var/lib/mecab/dic/open-jtalk/naist-jdic,/usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice,1,,

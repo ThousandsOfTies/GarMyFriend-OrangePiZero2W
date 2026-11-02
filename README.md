@@ -82,3 +82,8 @@ npm run test:vm
 ローカル試験では表情処理、Bridgeが表情を判断しないこと、2部品の画面と入出力を確認します。VM試験は実際の仮想GPIO・SPIと画面の画素一致を確認します。VM内の `python3 -B tests/vm-parts.py` は、顔アプリを止めたときにBridgeだけでは表情を変えられず、WebPanelを止めてもアプリが動くことを確認します。
 
 [操作・再構築手順](SIMULATOR.md) / [設計](DESIGN.md)
+
+## GarServoPet・発話の追加
+
+PCA9685と4サーボの制御アプリを依存submoduleとして再利用し、顔・中立動作・日本語発話を連動できます。
+追加機能は初期状態では無効です。配線・音声機器の準備と有効化は[統合手順](docs/SERVO_AND_SPEECH.md)を参照してください。

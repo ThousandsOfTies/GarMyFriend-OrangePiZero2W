@@ -2,3 +2,8 @@ component_id,name,kind,part_number,description
 orangepi_zero2w,Orange Pi Zero 2W,board,Orange Pi Zero 2W,H618 ARM64 1GB board
 round_lcd_7pin,Round SPI LCD 7-pin,display,YMS-circlelcd-pinari,YMS PARTS 1.28-inch round IPS display identified from owner-supplied Amazon listing ASIN B0G4JW94KZ; listing states GC9A01 driver and 240x240 at 3V to 5V; GC9A01 initialization and 240x240 face output functionally verified at 3.3V; exact controller ID not read; actual board has 7 terminals and no BLK terminal
 ky040_encoder,Rotary encoder,input,KY-040,User confirmed part number and CLK DT SW + GND terminals; board manufacturer and pull-ups unverified
+pca9685-1,PCA9685 16-channel PWM controller,controller,PCA9685,Reused GarServoPet controller; new Orange Pi I2C connection not yet tested
+sg90-1,SG90 micro servo 1,actuator,SG90,Reused GarServoPet mechanism and channel mapping
+sg90-2,SG90 micro servo 2,actuator,SG90,Reused GarServoPet mechanism and channel mapping
+sg90-3,SG90 micro servo 3,actuator,SG90,Reused GarServoPet mechanism and channel mapping
+sg90-4,SG90 micro servo 4,actuator,SG90,Reused GarServoPet mechanism and channel mapping

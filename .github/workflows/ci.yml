@@ -17,6 +17,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run test:composition
+      - run: python3 -m unittest discover -s sources/gar-tools/tests -p test_product_composition.py -v
+      - run: python3 -m unittest discover -s sources/board-orangepi-zero2w/tests -v
       - name: Build the fixed ARM64 target
         run: |
           sudo apt-get update
