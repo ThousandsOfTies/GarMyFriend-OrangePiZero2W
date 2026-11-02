@@ -82,9 +82,9 @@ aplay -l
 aplay -L
 ```
 
-`hardware/orangepi-zero2w/effects.csv` のspeech行で `enabled=1` にし、`device` を
-実際の出力先（例 `plughw:CARD=実機で表示されたカード名,DEV=0`）へ変更します。
-`default` は例示値です。HDMIへ誤出力しないよう、実機でカード名を選びます。
+`hardware/orangepi-zero2w/effects.csv` のspeech行で `enabled=1` にし、
+`audio.csv` のplayback行へ実際の出力先を指定します。録音と再生の準備・試験は
+[USBマイク・スピーカー](USB_AUDIO.md)を参照してください。機器未着のため初期値は空欄です。
 
 顔のサービスとは別に発話だけを試すコマンド:
 
@@ -101,7 +101,8 @@ USB音声入力型スピーカー、USBオーディオ変換アダプター＋3.
 
 - 多摩電子 [PR-SK95CK](https://tamadenco.co.jp/product/pr-sk95ck/)。USB-C音声入出力の
   マイク・スピーカー一体型。ユーザー購入済み、到着予定2026-11-03。
-  Linuxでの認識・録音・再生、USB給電は到着後に確認します。マイク取り込みは未実装です。
+  Linuxでの認識・録音・再生、USB給電は到着後に確認します。明示的な短時間録音と
+  WAV再生CLIを追加済みです。音声認識・LLMとの会話はまだ実装していません。
 
 検討時の比較:
 

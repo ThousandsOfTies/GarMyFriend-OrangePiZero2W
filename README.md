@@ -93,3 +93,4 @@ PCA9685と4サーボの制御アプリを依存submoduleとして再利用し、
 `npm run body -- forward --from stand --dry-run` で実機を動かさずに動作列を確認できます。
 操作・調整方法と実機で未確認の範囲は[身体モード](docs/BODY_CONTROL.md)を参照してください。
 追加機能は初期状態では無効です。配線・音声機器の準備と有効化は[統合手順](docs/SERVO_AND_SPEECH.md)を参照してください。
+USBマイク・スピーカーは[音声の設定・確認手順](docs/USB_AUDIO.md)に沿って、機器一覧、短時間録音、WAV再生、日本語発話を確認できます。実機でのUSB音声は機器到着後に検証します。

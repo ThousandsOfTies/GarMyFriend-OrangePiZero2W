@@ -7,3 +7,4 @@ sg90-1,SG90 micro servo 1,actuator,SG90,Reused GarServoPet mechanism and channel
 sg90-2,SG90 micro servo 2,actuator,SG90,Reused GarServoPet mechanism and channel mapping
 sg90-3,SG90 micro servo 3,actuator,SG90,Reused GarServoPet mechanism and channel mapping
 sg90-4,SG90 micro servo 4,actuator,SG90,Reused GarServoPet mechanism and channel mapping
+usb_speakerphone,Tama USB speakerphone,audio,PR-SK95CK,Purchased microphone and speaker; Linux USB audio recognition and power not yet verified; arrival expected 2026-11-03
