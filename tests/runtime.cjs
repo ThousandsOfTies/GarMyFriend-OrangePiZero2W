@@ -7,6 +7,7 @@ const {createSimulatorServer}=require('../simulation/server.cjs');
 const {LiveController}=require('../simulation/live-controller.cjs');
 const {FriendRuntime}=require('../sources/gar-my-friend/application/friend-runtime.cjs');
 const {execute}=require('../sources/gar-my-friend/application/friend-control.cjs');
+const {createGunzip}=require('node:zlib');
 
 function request(port,route,{method='GET',body,headers={}}={}){
   return new Promise((resolve,reject)=>{
@@ -62,4 +63,29 @@ test('conversation lease isolates tabs, deduplicates tools and clears playback o
     await live.handle({action:'close',session:opened.session});assert.equal(friend.face.speaking,false);assert.equal(live.state().active,false);
     await assert.rejects(live.handle({action:'heartbeat',session:opened.session}),/ended/);
   }finally{await live.dispose();}
+});
+
+test('event stream compresses changed pixels, skips unchanged output and isolates reconnecting viewers',async t=>{
+  const bridge={frame:Buffer.alloc(115200),frameId:'first',status(){return {displayReady:true,frameId:this.frameId};},state(){return {io:this.status()};},close(){}};
+  const body={state:()=>({ready:true}),async refresh(){},async close(){}};
+  const server=createSimulatorServer({deviceBridge:bridge,bodyController:body});
+  server.listen(0,'127.0.0.1');await once(server,'listening');const port=server.address().port,clients=[];
+  t.after(async()=>{for(const client of clients)client.destroy();await server.shutdown();});
+  const wait=async predicate=>{for(let i=0;i<60;i++){if(predicate())return;await new Promise(resolve=>setTimeout(resolve,25));}assert.fail('Stream update timed out');};
+  function open(){
+    const result={text:'',bytes:0,encoding:null};
+    const req=http.get({host:'127.0.0.1',port,path:'/api/events',headers:{'Accept-Encoding':'gzip'}},res=>{
+      result.encoding=res.headers['content-encoding'];res.on('data',data=>{result.bytes+=data.length;});
+      const decoded=res.pipe(createGunzip());decoded.on('error',()=>{});decoded.on('data',data=>{result.text+=data;});
+    });clients.push(req);return result;
+  }
+  const first=open();await wait(()=>first.text.includes('event: frame'));
+  assert.equal(first.encoding,'gzip');
+  assert.ok(first.bytes<3000,'Compress solid-colour framebuffer instead of sending 115 KB raw pixels');
+  const stable=first.text;await new Promise(resolve=>setTimeout(resolve,650));assert.equal(first.text,stable);
+  const second=open();await wait(()=>second.text.includes('event: frame'));
+  assert.equal(first.text,stable,'Joining a second viewer must not resend the first viewer snapshot');
+  bridge.frame=Buffer.alloc(115200,90);bridge.frameId='second';
+  await wait(()=>first.text.includes('second')&&second.text.includes('second'));
+  assert.equal((await request(port,'/api/events',{headers:{Origin:'https://untrusted.example'}})).status,403);
 });

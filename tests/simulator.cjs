@@ -12,7 +12,8 @@ function frame(color){const data=Buffer.alloc(115200);for(let i=0;i<data.length;
   const server=createSimulatorServer({deviceBridge:bridge,bodyController:body});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({channel:process.platform==='win32'?'msedge':undefined,headless:true});
   try{
-    const page=await browser.newPage({viewport:{width:1000,height:750}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const page=await browser.newPage({viewport:{width:1000,height:750}}),errors=[],requests=[];page.on('pageerror',error=>errors.push(error.message));
+    page.on('request',request=>requests.push(new URL(request.url()).pathname));
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     const forward=page.locator('[data-mode="forward"]'),stop=page.locator('[data-mode="stop"]');
     await page.waitForFunction(()=>!document.querySelector('[data-mode="forward"]').disabled);
@@ -20,6 +21,12 @@ function frame(color){const data=Buffer.alloc(115200);for(let i=0;i<data.length;
     assert.equal(await page.locator('gar-speakerphone').count(),1);
     assert.equal(await page.locator('gar-sg90').count(),4);assert.equal(await page.locator('gar-pca9685').count(),1);
     assert.equal(await page.locator('gar-rotary,#expressions,#scenarios,#record,#pause').count(),0);
+    await page.evaluate(()=>{
+      window.pwmUpdates=0;
+      document.querySelector('gar-pca9685').addEventListener('gar-pca9685-state',()=>window.pwmUpdates++);
+    });
+    await page.waitForTimeout(1100);
+    assert.equal(await page.evaluate(()=>window.pwmUpdates),0,'Unchanged PWM must not redraw the board and four servos');
     const pixels=()=>page.locator('#screen').evaluate(display=>display.displayContext.canvas.toDataURL());
     const first=await pixels();await forward.click();
     await page.waitForFunction(()=>document.querySelector('[data-mode="forward"]').disabled);
@@ -39,6 +46,8 @@ function frame(color){const data=Buffer.alloc(115200);for(let i=0;i<data.length;
     assert.deepEqual(calls,[{mode:'forward',from:'stand'},{mode:'stop'},{mode:'lie',from:'stand'},{mode:'stand',from:'lie'},{mode:'stop'}]);
     bridge.frame=frame(0x001f);bridge.frameId='second';
     await page.waitForFunction(old=>document.querySelector('#screen').displayContext.canvas.toDataURL()!==old,first);
+    assert.equal(requests.filter(path=>path==='/api/events').length,1,'Use one persistent state/pixel connection');
+    assert.equal(requests.filter(path=>['/api/state','/api/io/frame'].includes(path)).length,0,'Normal operation must not poll state or fetch frames repeatedly');
     for(const width of [320,760,1440]){await page.setViewportSize({width,height:800});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
     fs.mkdirSync('artifacts',{recursive:true});await page.setViewportSize({width:1000,height:750});await page.screenshot({path:'artifacts/parts-fixture.png',fullPage:true});
     await browser.close();assert.deepEqual(errors,[]);

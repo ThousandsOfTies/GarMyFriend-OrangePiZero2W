@@ -18,7 +18,7 @@ class DeviceBridge {
       this.counter=state.gpio.rotary.counter;this.ready=Boolean(state.hardware.gpio.rotary);this.error=null;
       this.pwm=state.i2c?.pca9685||null;this.pwmReady=Boolean(state.hardware.devices?.includes('pca9685'));
     }catch(error){this.ready=false;this.pwmReady=false;this.error=error.message;}
-    if(!this.closed){this.timer=setTimeout(()=>this.poll(),80);this.timer.unref();}
+    if(!this.closed){this.timer=setTimeout(()=>this.poll(),200);this.timer.unref();}
   }
   async inject({action,direction}){
     if(!this.ready)throw new Error(this.error||'GPIO bridge is not ready');

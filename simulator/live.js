@@ -6,17 +6,17 @@ const device=document.querySelector('#speakerphone'),start=document.querySelecto
 const key=document.querySelector('#live-key'),model=document.querySelector('#live-model'),voice=document.querySelector('#live-voice');
 const status=document.querySelector('#live-status'),transcript=document.querySelector('#live-transcript'),tool=document.querySelector('#live-tool');
 const text=document.querySelector('#live-text'),send=document.querySelector('#live-send'),pose=document.querySelector('#start-pose');
-let client,session=null,generation=0,heartbeat,pollTimer,busy=false,ready=false,disposed=false,lastLine=null,lastRole=null,idleMessage='';
+let client,session=null,generation=0,heartbeat,busy=false,ready=false,lastLine=null,lastRole=null,idleMessage='';
 async function command(value){
   const response=await fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value),signal:AbortSignal.timeout(value.action==='tool'?38000:4000)});
   const result=await response.json();if(!response.ok)throw new Error(result.error||'アプリに接続できません');return result;
 }
 function controls(){start.disabled=busy||!ready;stop.disabled=!busy;key.disabled=busy;model.disabled=busy;voice.disabled=busy;text.disabled=send.disabled=!client?.ready;}
-async function poll(){
-  try{const state=await(await fetch('/api/state',{signal:AbortSignal.timeout(2500)})).json();ready=state.live?.ready===true;if(!busy)status.textContent=idleMessage||(ready?'APIキーを入力して会話を始められます':'VM内の共通アプリを待っています');}
-  catch{ready=false;if(!busy)status.textContent=idleMessage||'WebPanelとの接続を確認中';}
-  controls();if(!disposed)pollTimer=setTimeout(poll,2000);
-}
+document.addEventListener('friend-panel-state',({detail:state})=>{
+  ready=state?.live?.ready===true;
+  if(!busy)status.textContent=idleMessage||(!state?'WebPanelとの接続を確認中':ready?'APIキーを入力して会話を始められます':'VM内の共通アプリを待っています');
+  controls();
+});
 async function end(message='停止しました'){
   ++generation;const previous=session;session=null;clearInterval(heartbeat);client?.stop();client=null;
   controls();status.textContent='停止しています';
@@ -62,5 +62,4 @@ device.addEventListener('gar-audio-mute',({detail})=>{if(detail.muted)client?.au
 device.addEventListener('gar-audio-error',({detail})=>end(detail.message));
 device.addEventListener('gar-audio-playback',({detail})=>{const active=session;if(active)command({action:'playback',session:active,playing:detail.playing}).catch(error=>{if(session===active)end(error.message);});});
 document.querySelector('#live-text-form').addEventListener('submit',event=>{event.preventDefault();if(!client?.ready||!text.value.trim())return;client.text(text.value.trim());text.value='';lastLine=lastRole=null;});
-window.addEventListener('pagehide',()=>{disposed=true;clearTimeout(pollTimer);clearInterval(heartbeat);client?.stop();device.stop().catch(()=>{});if(session)fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'close',session}),keepalive:true}).catch(()=>{});});
-poll();
+window.addEventListener('pagehide',()=>{clearInterval(heartbeat);client?.stop();device.stop().catch(()=>{});if(session)fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'close',session}),keepalive:true}).catch(()=>{});});
