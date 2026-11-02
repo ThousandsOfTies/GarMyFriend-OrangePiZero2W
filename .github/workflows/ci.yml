@@ -16,6 +16,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - name: Check native servo limits and interruption
+        run: make -C sources/gar-my-friend/dependencies/gar-servo-pet check
       - run: npm run test:composition
       - run: python3 -m unittest discover -s sources/gar-tools/tests -p test_product_composition.py -v
       - run: python3 -m unittest discover -s sources/board-orangepi-zero2w/tests -v

@@ -10,7 +10,7 @@
 
 ![円形ディスプレイの顔を持つぬいぐるみロボットの完成イメージ。右側に内部の小型ロボットと取り外したカバー、下側に表情の例を示す。](docs/images/garmyfriend-concept.png)
 
-*目指す姿のコンセプト画像です。手足や歩行機構はこれから設計します。*
+*目指す姿のコンセプト画像です。身体には既存のGarServoPetの4脚機構を使い、歩行と姿勢を調整します。*
 
 このリポジトリは **Orange Pi Zero 2W用のProduct** です。表情処理の共通アプリは [gar-my-friend](https://github.com/ThousandsOfTies/gar-my-friend) に分離し、サブモジュールとして取り込みます。[リポジトリの分担](docs/REPOSITORIES.md)
 
@@ -86,4 +86,7 @@ npm run test:vm
 ## GarServoPet・発話の追加
 
 PCA9685と4サーボの制御アプリを依存submoduleとして再利用し、顔・中立動作・日本語発話を連動できます。
+身体は前進・後進・停止・伏せ・立ち上がりの5モードをCLI/APIで操作できます。
+`npm run body -- forward --from stand --dry-run` で実機を動かさずに動作列を確認できます。
+操作・調整方法と実機で未確認の範囲は[身体モード](docs/BODY_CONTROL.md)を参照してください。
 追加機能は初期状態では無効です。配線・音声機器の準備と有効化は[統合手順](docs/SERVO_AND_SPEECH.md)を参照してください。

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "npm --prefix sources/gar-my-friend run build",
+    "body": "node scripts/body.cjs",
     "test": "npm --prefix sources/gar-my-friend test && node --test tests/runtime.cjs tests/hardware.cjs && node tests/simulator.cjs",
     "test:runtime": "npm --prefix sources/gar-my-friend test && node --test tests/runtime.cjs tests/hardware.cjs",
     "test:preview": "npm --prefix sources/gar-my-friend run test:preview",

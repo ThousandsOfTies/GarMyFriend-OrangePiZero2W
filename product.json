@@ -48,8 +48,10 @@
   "payload": [
     "product.json",
     "scripts/run-face.cjs",
+    "scripts/body.cjs",
     "hardware/orangepi-zero2w",
     "sources/gar-my-friend/application",
+    "sources/gar-my-friend/tools/body.cjs",
     "sources/gar-my-friend/firmware",
     "sources/gar-my-friend/shared",
     "hardware/components.csv",
