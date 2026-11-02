@@ -18,18 +18,18 @@
 
 現在は、その顔の部分から作っています。Orange Pi Zero 2W（H618・ARM64・RAM 1GB）にGC9A01互換の円形ディスプレイとKY-040ロータリーエンコーダーをつなぎ、実機で動作確認済みです。目・鼻・口・頬を幾何図形で描き、ノブの回転で8つの表情を切り替えます。押すとまばたきします。
 
-開発時は共通の顔アプリとサーボ制御をVirtualBoxのLinux上で動かし、WebPanelを実物の部品の代わりに使います。円形液晶・PCA9685・4サーボを並べ、前進・後進・停止・伏せ・立ち上がりを試せます。ロータリーの接続は不要です。
+開発時は共通の顔アプリとサーボ制御をVirtualBoxのLinux上で動かし、WebPanelを実物の部品の代わりに使います。円形液晶・PCA9685・4サーボ・USBスピーカーフォンを並べ、PCの音声でGemini Liveと会話しながら表情・身体モードを試せます。[音声会話の使い方](docs/LIVE_PANEL.md)。ロータリーの接続は不要です。
 
 手持ちノブの型番は **[KY-040](hardware/modules/KY-040.md)**。液晶は **[YMS PARTS 1.28インチ円形IPS・7ピン](hardware/modules/round-lcd-7pin.md)**（商品モデル番号 YMS-circlelcd-pinari）として記録しています。[実機の配線表](hardware/WIRING.md)はVMの仮想GPIO番号と区別して管理します。
 
 部品・型番は [`hardware/components.csv`](hardware/components.csv)、物理配線は [`connections.csv`](hardware/connections.csv) が正本です。VMの実行時割り当ては `gpio.csv`・`spi.csv` から読みます。[CSVの役割](hardware/README.md)
 
 ```text
-WebPanelのノブ → Bridge → gpio-sim → /dev/gpiochip0
-                                            ↓
-                              独立した顔アプリ（表情・アニメーション）
-                                            ↓
-WebPanelの液晶 ← Bridge ← GC9A01仮想ドライバ ← /dev/spidev0.0
+PCマイク ⇄ Gemini Live ⇄ PCスピーカー
+               ↓ 表情・身体のツール
+WebPanelの操作 → Product adapter → Unix socket → 共通アプリ
+                                                   ↓
+WebPanelの部品 ← Bridge ← 仮想SPI・I2C ← 描画・native C制御
 ```
 
 **表情を決めるのは実行アプリです。** WebPanelとBridgeは、部品の入力信号とドライバが受け取った画素を受け渡します。顔アプリはWebPanelを停止しても動作します。
@@ -62,7 +62,7 @@ Cloudflare Quick TunnelのURLは再発行すると変わります。開発用の
 | --- | --- |
 | `sources/gar-my-friend/application/` | 表情の選択、アニメーション、GPIO入力、SPIへの描画出力。HTTPやWebPanelに依存しない |
 | `simulation/` | 仮想GPIOへの入力と、ドライバが受け取った画素の中継。表情の意味を持たない |
-| `simulator/` | 共有の液晶・PCA9685・SG90とProductの5モードを接続するWebPanel |
+| `simulator/` | 共通の液晶・PCA9685・SG90・音声部品と、Gemini Live・Productの操作を接続するWebPanel |
 | `hardware/` | 部品・物理配線と、VM / Orange PiそれぞれのGPIO・SPI割り当て |
 | `sources/gar-tools/` | 共有Web Components、GPIO入力、CUSEドライバ、汎用Bridgeのsubmodule |
 | `sources/gar-my-friend/shared/`、`sources/gar-my-friend/firmware/` | 表情データとC++描画コア |
@@ -94,4 +94,4 @@ PCA9685と4サーボの制御アプリを依存submoduleとして再利用し、
 操作・調整方法と実機で未確認の範囲は[身体モード](docs/BODY_CONTROL.md)を参照してください。
 追加機能は初期状態では無効です。配線・音声機器の準備と有効化は[統合手順](docs/SERVO_AND_SPEECH.md)を参照してください。
 USBマイク・スピーカーは[音声の設定・確認手順](docs/USB_AUDIO.md)に沿って、機器一覧、短時間録音、WAV再生、日本語発話を確認できます。実機でのUSB音声は機器到着後に検証します。
-[USBネットワーク＋Windowsの通信共有](docs/USB_NETWORK.md)は実機設定済みで、Orange PiからDNS・HTTPS接続を確認しました。Gemini Liveによる会話機能はまだ未実装です。
+[USBネットワーク＋Windowsの通信共有](docs/USB_NETWORK.md)は実機設定済みで、Orange PiからDNS・HTTPS接続を確認しました。Gemini LiveはWebPanelから使用できます。実機のUSB音声との接続は次の段階です。

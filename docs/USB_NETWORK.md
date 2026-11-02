@@ -107,4 +107,5 @@ timedatectl show -p NTPSynchronized
 - NTP同期成功。基板のずれていた時刻も修正された。
 - USB複合デバイスservice、既存の顔service、時刻同期serviceはactive。
 
-Gemini Live接続やAPIキー設定、USB音声機器の確認は次の段階です。
+Gemini Liveは先に[WebPanel](LIVE_PANEL.md)で会話できるようにしました。
+実機側のAPIキー設定・USB音声機器との接続は次の段階です。

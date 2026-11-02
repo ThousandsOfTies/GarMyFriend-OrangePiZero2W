@@ -4,6 +4,9 @@ const assert=require('node:assert/strict');
 const http=require('node:http');
 const {once}=require('node:events');
 const {createSimulatorServer}=require('../simulation/server.cjs');
+const {LiveController}=require('../simulation/live-controller.cjs');
+const {FriendRuntime}=require('../sources/gar-my-friend/application/friend-runtime.cjs');
+const {execute}=require('../sources/gar-my-friend/application/friend-control.cjs');
 
 function request(port,route,{method='GET',body,headers={}}={}){
   return new Promise((resolve,reject)=>{
@@ -24,7 +27,9 @@ test('panel relays only driver frames and raw rotary actions, without applicatio
   assert.deepEqual(calls,[{action:'rotate',direction:1},{action:'press'}]);
   assert.deepEqual((await request(port,'/api/io/frame')).body,frame,'The bridge must never draw a face in response to a knob event');
   const state=JSON.parse((await request(port,'/api/state')).body);
-  assert.deepEqual(Object.keys(state).sort(),['body','io','rotary']);assert.equal(state.rotary.counter,1);
+  assert.deepEqual(Object.keys(state).sort(),['body','io','live','rotary']);assert.equal(state.rotary.counter,1);
+  assert.equal(state.live.ready,false);
+  assert.equal((await post('/api/live',{action:'open'})).status,503,'A host panel cannot enable application commands on physical hardware');
   assert.equal(state.body.ready,false,'A local-host panel must never start physical body commands');
   assert.equal((await post('/api/body',{mode:'forward',from:'stand'})).status,503);
   for(const value of [null,[],{mode:'shell',from:'stand'},{mode:'forward'},{mode:'stop',from:'stand'},{mode:'stand',from:'stand',command:'anything'}])assert.equal((await post('/api/body',value)).status,400);
@@ -33,8 +38,28 @@ test('panel relays only driver frames and raw rotary actions, without applicatio
   for(const input of [null,[],{action:'rotate',direction:0},{action:'press',direction:1},{action:'expression',value:'happy'}])assert.equal((await post('/api/rotary',input)).status,400);
   assert.equal(calls.length,2);
   assert.equal((await post('/api/rotary',{action:'press'},{Origin:'https://untrusted.example'})).status,403);
+  assert.equal((await post('/api/live',{action:'open'},{Origin:'https://untrusted.example'})).status,403);
   assert.equal((await request(port,'/health',{headers:{Host:'untrusted.example'}})).status,403);
   for(const route of ['/simulator/%2e%2e/shared/expressions.json','/simulator/%5c..%5capplication/face.cjs'])assert.equal((await request(port,route)).status,403);
   for(const route of ['/application/face.cjs','/preview/face.js','/gar-components/gamepad.js'])assert.equal((await request(port,route)).status,404);
   for(const route of ['/gar-components/pca9685.js','/gar-components/sg90.js','/gar-components/servo-model.mjs','/gar-components/pwm-components.css'])assert.equal((await request(port,route)).status,200);
+});
+
+test('conversation lease isolates tabs, deduplicates tools and clears playback on close',async()=>{
+  const friend=new FriendRuntime({servo:{async perform(){return true;}}}),calls=[];
+  const body={enabled:true,state:()=>friend.status().body,call:async value=>{calls.push(value);return execute(friend,value);}};
+  const live=new LiveController(body);
+  try{
+    const opened=await live.handle({action:'open'});
+    assert.equal(opened.config.tools.length,3);
+    await assert.rejects(live.handle({action:'open'}),/Another conversation/);
+    await assert.rejects(live.handle({action:'tool',session:'wrong',id:'x'}),/ended/);
+    await live.handle({action:'playback',session:opened.session,playing:true});assert.equal(friend.face.speaking,true);
+    const tool={action:'tool',session:opened.session,id:'once',name:'change_emotion',args:{emotion:'happy'}};
+    assert.deepEqual(await live.handle(tool),await live.handle(tool));
+    assert.equal(calls.filter(value=>value.type==='tool').length,1);
+    await assert.rejects(live.handle({action:'tool',session:opened.session,id:'bad',name:'shell',args:{}}),/Unknown tool/);
+    await live.handle({action:'close',session:opened.session});assert.equal(friend.face.speaking,false);assert.equal(live.state().active,false);
+    await assert.rejects(live.handle({action:'heartbeat',session:opened.session}),/ended/);
+  }finally{await live.dispose();}
 });

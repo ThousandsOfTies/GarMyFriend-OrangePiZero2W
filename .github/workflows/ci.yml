@@ -16,6 +16,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - name: Check independent audio and Gemini Live protocol
+        run: node --test sources/gar-tools/web-simulator/tests/audio-live.test.mjs
       - name: Check shared ALSA adapter without physical audio devices
         run: node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.test.cjs tests/linux-audio.cjs
       - name: Check native servo limits and interruption

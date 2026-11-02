@@ -8,6 +8,8 @@ ConditionPathExists=/home/gar/GarMyFriend-OrangePiZero2W/scripts/run-face.cjs
 Type=simple
 User=gar
 WorkingDirectory=/home/gar/GarMyFriend-OrangePiZero2W
+Environment=GAR_EFFECTS_DIR=/home/gar/GarMyFriend-OrangePiZero2W/.gar/body-sim
+Environment=GAR_FRIEND_CONTROL_SOCKET=/home/gar/GarMyFriend-OrangePiZero2W/.gar/friend.sock
 ExecStart=/usr/bin/node scripts/run-face.cjs
 Restart=on-failure
 RestartSec=2

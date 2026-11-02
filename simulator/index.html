@@ -6,6 +6,7 @@
   <title>GarMyFriend · 顔とサーボ</title>
   <link rel="stylesheet" href="/simulator/body.css">
   <script type="module" src="/simulator/app.js"></script>
+  <script type="module" src="/simulator/live.js"></script>
 </head>
 <body>
   <main>
@@ -17,6 +18,18 @@
         <div class="pins" aria-hidden="true"><span>VCC</span><span>GND</span><span>SCL</span><span>SDA</span><span>DC</span><span>CS</span><span>RST</span></div>
       </div>
       <p class="part-label">GC9A01 · 240 × 240</p>
+    </section>
+    <section class="part audio-part" aria-labelledby="audio-title">
+      <h2 id="audio-title">声で話しかける</h2>
+      <gar-speakerphone id="speakerphone" label="USBスピーカーフォン · PCの音声入出力で代替"></gar-speakerphone>
+      <label class="live-label">Gemini APIキー <small>この接続だけで使用</small><input id="live-key" type="password" autocomplete="off" spellcheck="false" placeholder="APIキーを入力"></label>
+      <details class="live-settings"><summary>接続設定</summary><label class="live-label">モデル<input id="live-model" value="gemini-3.8-live" spellcheck="false"></label><label class="live-label">声<input id="live-voice" value="Puck" spellcheck="false"></label></details>
+      <div class="live-buttons"><button id="live-start" disabled>会話を始める</button><button id="live-stop" disabled>停止</button></div>
+      <p id="live-status" role="status">アプリとの接続を確認中</p>
+      <form id="live-text-form"><label for="live-text">文字でも話しかける</label><div><input id="live-text" maxlength="2000" disabled placeholder="伏せてみて"><button id="live-send" disabled>送信</button></div></form>
+      <ol id="live-transcript" aria-label="今回の会話" role="log"></ol>
+      <p id="live-tool" class="section-note"></p>
+      <p class="section-note">音声はGeminiへ送信します。顔・脚の操作先はVM内の仮想部品です。実機へは送信しません。</p>
     </section>
     <section class="part body-part" aria-labelledby="body-title">
       <h2 id="body-title">身体を動かす</h2>

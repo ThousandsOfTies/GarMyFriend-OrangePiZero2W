@@ -15,6 +15,7 @@ sudo systemctl enable garmyfriend.service garmyfriend-panel.service
 rm -f simulation/runtime.cjs simulation/linux-devices.cjs simulation/rotary-input.cjs
 rm -f hardware/modules.json hardware/pin-plan.json
 sudo systemctl restart garmyfriend-devices.service
+node simulation/prepare-effects.cjs
 sudo systemctl restart garmyfriend.service
 sudo systemctl restart garmyfriend-panel.service
 sudo systemctl --no-pager --full status garmyfriend.service garmyfriend-panel.service garmyfriend-devices.service

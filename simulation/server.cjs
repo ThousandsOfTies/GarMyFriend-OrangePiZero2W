@@ -5,9 +5,10 @@ const path=require('node:path');
 const os=require('node:os');
 const {DeviceBridge}=require('./device-bridge.cjs');
 const {BodyController,validateBodyInput}=require('./body-controller.cjs');
+const {LiveController}=require('./live-controller.cjs');
 class RequestError extends Error {constructor(message,status=400){super(message);this.status=status;}}
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
-const parts=new Set(['display.mjs','framebuffer.mjs','rotary.mjs','pca9685.js','sg90.js','servo-model.mjs','component-styles.mjs','pwm-components.css']);
+const parts=new Set(['display.mjs','framebuffer.mjs','rotary.mjs','pca9685.js','sg90.js','servo-model.mjs','component-styles.mjs','pwm-components.css','speakerphone.mjs','audio-pcm.mjs','gemini-live.mjs','audio-capture-worklet.js']);
 function parsePublicOrigin(value){
   if(!value)return null;
   const url=new URL(value);
@@ -26,13 +27,15 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
   root=fs.realpathSync(root);
   const bridge=deviceBridge||new DeviceBridge(),origin=parsePublicOrigin(publicOrigin);
   const body=bodyController||new BodyController({root,environment});
+  const live=new LiveController(body);
   const host={environment,platform:process.platform,arch:process.arch,hostname:os.hostname()};
   const server=http.createServer(async(req,res)=>{
     const local=[`127.0.0.1:${server.address().port}`,`localhost:${server.address().port}`];
     const hosts=[...local,...(origin?[new URL(origin).host]:[])];
     const origins=[...local.map(value=>'http://'+value),...(origin?[origin]:[])];
     res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
-    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://generativelanguage.googleapis.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    res.setHeader('Permissions-Policy','microphone=(self), camera=()');
     const json=(code,value)=>{const data=JSON.stringify(value);res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(req.method==='HEAD'?undefined:data);};
     try{
       if(!hosts.includes(req.headers.host))throw new RequestError('Unknown panel host',403);
@@ -40,7 +43,7 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
       if(route.includes('\\')||route.includes('\0')||route.split('/').includes('..'))throw new RequestError('Path outside public files',403);
       if(req.method==='GET'||req.method==='HEAD'){
         if(route==='/health')return json(200,{ok:bridge.status().displayReady,product:'orange-pi-face-lab',pid:process.pid,host,io:bridge.status()});
-        if(route==='/api/state')return json(200,{...bridge.state(),body:body.state()});
+        if(route==='/api/state'){await body.refresh?.();return json(200,{...bridge.state(),body:body.state(),live:live.state()});}
         if(route==='/api/body/config')return json(200,{servos:body.configuration()});
         if(route==='/api/io/frame'){
           if(!bridge.status().displayReady)throw new RequestError('Waiting for the display driver',503);
@@ -56,12 +59,13 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
         if(!types[path.extname(file)])throw new RequestError('Not found',404);
         const data=fs.readFileSync(file);res.writeHead(200,{'Content-Type':types[path.extname(file)],'Content-Length':data.length});res.end(req.method==='HEAD'?undefined:data);return;
       }
-      if(req.method!=='POST'||!['/api/rotary','/api/body'].includes(route))throw new RequestError('Not found',404);
+      if(req.method!=='POST'||!['/api/rotary','/api/body','/api/live'].includes(route))throw new RequestError('Not found',404);
       if((req.headers.origin&&!origins.includes(req.headers.origin))||req.headers['sec-fetch-site']==='cross-site')throw new RequestError('Cross-site input is not accepted',403);
       if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']||''))throw new RequestError('Send JSON',415);
       const chunks=[];let length=0;
-      for await(const chunk of req){length+=chunk.length;if(length>1024)throw new RequestError('Input too large',413);chunks.push(chunk);}
+      for await(const chunk of req){length+=chunk.length;if(length>(route==='/api/live'?4096:1024))throw new RequestError('Input too large',413);chunks.push(chunk);}
       let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new RequestError('Invalid JSON');}
+      if(route==='/api/live'){try{return json(200,await live.handle(input));}catch(error){throw new RequestError(error.message,error.status||400);}}
       if(route==='/api/body'){
         try{validateBodyInput(input);}catch(error){throw new RequestError(error.message);}
         return json(200,{ok:true,body:await body.command(input)});
@@ -71,8 +75,8 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
       json(200,{ok:true});
     }catch(error){if(!res.headersSent)json(error.status||500,{error:error.status?error.message:'Device panel error'});else res.end();}
   });
-  server.shutdown=async()=>{await body.close();bridge.close();await new Promise(resolve=>server.close(resolve));};
-  server.on('close',()=>{bridge.close();body.close().catch(error=>console.error(error.message));});return server;
+  server.shutdown=async()=>{await live.dispose();await body.close();bridge.close();await new Promise(resolve=>server.close(resolve));};
+  server.on('close',()=>{bridge.close();live.dispose().catch(()=>{});body.close().catch(error=>console.error(error.message));});return server;
 }
 if(require.main===module){
   const args=process.argv.slice(2),port=args.length?Number(args[1]):8773;

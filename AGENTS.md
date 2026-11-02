@@ -1,12 +1,19 @@
 # GarMyFriend-OrangePiZero2W scope
 
 The user's current WebPanel scope is the GC9A01 face display, PCA9685 and four
-SG90 servos, with Product-level forward/backward/stop/lie/stand controls. The
+SG90 servos, USB speakerphone using PC audio, and Gemini Live conversation with
+App-owned expression/body tools. Include Product-level forward/backward/stop/lie/stand controls. The
 rotary encoder is not required in the current composition. Preserve the shared
 parts' appearance. Do not add unrelated dashboards, sensors, scenarios,
 record/replay or direct expression selectors. Body commands invoke the actual
 native controller against virtual I2C in the dedicated Linux simulator; the
 panel must never route these commands to a physical board.
+
+The browser's microphone/audio is an I/O substitute. Gemini transport and reusable
+speakerphone UI belong in gar-tools; App instructions, tool schemas and execution
+belong in gar-my-friend. Product adapters relay tools to the running VM application
+over its optional local control socket. Render only actual SPI pixels and native
+I2C output. API keys stay in browser session memory; never persist or log them.
 
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
