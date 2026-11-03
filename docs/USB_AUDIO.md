@@ -1,7 +1,9 @@
 # USBマイク・スピーカーをつなぐ
 
 購入済みの多摩電子 **PR-SK95CK** を想定した準備です。
-2026-11-02時点では機器未着のため、Linuxでの認識・音質・給電は未確認です。
+2026-11-03、接続中のOrange Pi Zero 2Wで **TSK95K / USB ID `3206:104f`** として認識しました。
+USB HOSTと `snd-usb-audio` が動作し、ALSAにマイク入力・スピーカー出力の両方が現れています。
+実際の録音内容・スピーカーの音・音質はまだ確認していません。
 この手順のコマンドは **Orange Pi上** で実行します。Windows上のWebPanelは
 仮想デバイス専用で、PCのマイクや実機の録音・サーボを操作しません。
 
@@ -23,8 +25,9 @@ USBマイク ── ALSA arecord ── 明示した1～15秒の録音 ── �
 
 最新版の配布物には `scripts/audio.cjs`、アプリ側の音声コマンド、gar-toolsの
 汎用ALSAアダプターが含まれます。[ビルド・配布](COMPOSITION.md)で作成します。
-現在の実機は旧顔アプリと個別の身体試験ソフトの配置です。この追加実装は
-実機へまだ導入しておらず、既存サービスの変更や録音は行っていません。
+実機の顔アプリとは別に、共通の音声CLIを使った読み取り専用の `check` を
+`/home/user/gar-penguin-update-20261103/audio-check/` に配置して確認しました。
+録音・再生・クラウド会話はこの検査では開始していません。
 
 USB機器はOrange Piの **USB HOST側** へ接続します。PCへのUSBシリアル接続は
 USBデバイス側なので別系統です。実機でHOST端子・変換アダプター・給電余裕を確認します。
@@ -51,17 +54,17 @@ Windowsでの `npm run audio -- check` は入口の確認に使えますが、US
 
 ## デバイスを明示する
 
-`hardware/orangepi-zero2w/audio.csv` は初期状態では空欄です。
+`hardware/orangepi-zero2w/audio.csv` は、2026-11-03に確認した `TSK95K` を指定しています。
 `devices` が表示した **実際の** `device` を、directionごとに転記します。
 
 ```csv
 direction,device
-capture,"plughw:CARD=実機のカード名,DEV=0"
-playback,"plughw:CARD=実機のカード名,DEV=0"
+capture,"plughw:CARD=TSK95K,DEV=0"
+playback,"plughw:CARD=TSK95K,DEV=0"
 ```
 
 カンマを含むのでCSVでは二重引用符で囲みます。カード番号より名前を使い、
-HDMIへ出力することを避けます。PR-SK95CKの実際のカード名はまだ不明です。
+HDMIへ出力することを避けます。PR-SK95CKの今回の実機カード名は `TSK95K` です。
 録音と再生で同じカード名・DEV番号になるとは限りません。
 同型機器を複数つなぐと名前に連番が付くことがあり、再確認が必要です。
 
@@ -103,4 +106,8 @@ Live会話は同じアプリ内で、入力→Gemini→返答のPCM再生と表�
   設定未完了時の拒否、保存済みWAVの保護、中断時の一時ファイル削除を確認。
 - Linux上: ダミーのALSA実行ファイルで録音・再生・日本語発話・実プロセスの中断を確認済み。
   ARM64向けビルドと配布物の作成、配布物内からの `check` 起動も確認しました。
-- 実機: USB認識・実音の録音/再生・給電・日本語合成器の導入は機器到着後に確認。
+- 実機（2026-11-03）: USB HOST配下で `NanosIC TSK95K`、`3206:104f`、`snd-usb-audio` を確認。
+  capture / playbackはともに `plughw:CARD=TSK95K,DEV=0`。共通アプリの `audio check` でも両方を検出。
+  USBの公称フォーマットは録音16kHz・再生48kHz、ともに16bit・2ch（`/proc/asound/card2/stream0`）。
+  `arecord` / `aplay` は導入済み。`open_jtalk` は未導入で、日本語のローカル音声合成は未準備。
+  録音・実際の再生・音質・長時間給電は未試験。顔サービスのaudio権限は、準備済みの更新スクリプトで追加する。

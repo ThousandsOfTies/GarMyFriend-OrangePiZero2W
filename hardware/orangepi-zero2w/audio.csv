@@ -1,3 +1,3 @@
 direction,device
-capture,
-playback,
+capture,"plughw:CARD=TSK95K,DEV=0"
+playback,"plughw:CARD=TSK95K,DEV=0"

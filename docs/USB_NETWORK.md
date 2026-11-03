@@ -109,4 +109,4 @@ timedatectl show -p NTPSynchronized
 
 Gemini Liveは先に[WebPanel](LIVE_PANEL.md)で会話できるようにしました。
 実機側のAPIキー設定とUSB音声会話は[実機会話の手順](NATIVE_LIVE.md)に追加しました。
-USB機器を使った実際の会話は、機器到着後に確認します。
+2026-11-03にUSB機器の録音・再生endpointを確認しました。実際の音声会話は引き続き未試験です。
