@@ -9,6 +9,7 @@ Type=simple
 User=gar
 WorkingDirectory=/home/gar/GarMyFriend-OrangePiZero2W
 Environment=GAR_SIM_ENVIRONMENT=virtualbox-linux
+EnvironmentFile=-/home/gar/GarMyFriend-OrangePiZero2W/.gar/build.env
 EnvironmentFile=-/home/gar/.config/garmyfriend/panel.env
 ExecStart=/usr/bin/node simulation/server.cjs --port 8773
 Restart=on-failure

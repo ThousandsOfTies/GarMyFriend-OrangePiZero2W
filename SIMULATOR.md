@@ -27,8 +27,28 @@ WebPanelには円形液晶、PCA9685、SG90×4を表示します。ロータリ�
 
 通常はSSHでローカル転送した **http://127.0.0.1:8773/** を開きます。
 アドレスは `.gar/vm/panel.json`。`python tools/vm.py local` はブラウザーを開かずに転送を準備します。
-変更の反映は `npm run vm:deploy`、状態は `npm run vm:status`、終了は `npm run vm:stop` です。
+変更の反映は下記のGAR経路を使用します。`vm:status`・`vm:stop` は従来のVM自体の確認・終了です。
 外部向けHTTPSが必要な場合だけ `npm run vm:publish` を明示して使います。
+
+## GARから更新・診断する
+
+GARに `Local/GarMyFriend-OrangePiZero2W` を登録し、`simulator=product_hook` と
+`codespace=native` を選びます。Productの `gar-simulator.json` と
+`tools/gar-simulator.py` が既存の専用VirtualBoxへ接続します。
+
+```powershell
+gar sim build --workspace Local/GarMyFriend-OrangePiZero2W
+gar sim deploy --workspace Local/GarMyFriend-OrangePiZero2W
+gar sim start --workspace Local/GarMyFriend-OrangePiZero2W --no-port-forward
+gar sim diag --workspace Local/GarMyFriend-OrangePiZero2W --json
+```
+
+ビルドはVM内で行い、アプリと仮想デバイスをまとめたチェックサム付きsnapshotを作ります。
+配置時にはサービスを停止して配置だけを行い、`start`で起動します。前の配置も残します。
+診断はsnapshotの全ファイル、各サービス、パネルのPID、パネルと共通アプリのbuild IDを
+確認し、GARが期待するsnapshotとの一致も検査します。画面表示だけで成功とは判定しません。
+
+会話は実機と同じ姿勢確認から始まります。詳細は[会話の手順](docs/LIVE_PANEL.md)を参照してください。
 
 ## 部品の接続口
 

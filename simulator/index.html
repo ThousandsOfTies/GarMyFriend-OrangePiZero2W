@@ -27,7 +27,8 @@
       <div class="live-buttons"><button id="live-start" disabled>会話を始める</button><button id="live-stop" disabled>停止</button></div>
       <p id="live-status" role="status">アプリとの接続を確認中</p>
       <p id="live-input-status" class="section-note">音声入力：停止中</p>
-      <form id="live-text-form"><label for="live-text">文字でも話しかける</label><div><input id="live-text" maxlength="2000" disabled placeholder="伏せてみて"><button id="live-send" disabled>送信</button></div></form>
+      <p class="section-note">最初に今の姿勢を尋ねます。「今は立っています」「今は伏せています」と答えてから、動作を指示してください。</p>
+      <form id="live-text-form"><label for="live-text">文字でも話しかける</label><div><input id="live-text" maxlength="2000" disabled placeholder="今は立っています"><button id="live-send" disabled>送信</button></div></form>
       <ol id="live-transcript" aria-label="今回の会話" role="log"></ol>
       <p id="live-tool" class="section-note"></p>
       <p class="section-note">音声はGeminiへ送信します。顔・脚の操作先はVM内の仮想部品です。実機へは送信しません。</p>
@@ -35,7 +36,7 @@
     <section class="part body-part" aria-labelledby="body-title">
       <h2 id="body-title">身体を動かす</h2>
       <p class="section-note">実機と共通のC制御を、Linuxの仮想デバイスで実行します。</p>
-      <label class="pose-label" for="start-pose">開始姿勢 <select id="start-pose"><option value="stand">立っている</option><option value="lie">伏せている</option></select></label>
+      <label class="pose-label" for="start-pose">手動操作の開始姿勢 <select id="start-pose"><option value="stand">立っている</option><option value="lie">伏せている</option></select></label>
       <div class="mode-buttons" role="group" aria-label="身体の動作">
         <button data-mode="forward" disabled>↑ 前進</button>
         <button data-mode="backward" disabled>↓ 後進</button>

@@ -38,6 +38,12 @@ and asking by voice. Stop, interruption and failed motion invalidate the pose.
 Explicit --from sessions retain the one-session policy and never reuse their pose
 after reconnection. Do not persist pose reports or treat them as sensor readings.
 
+Native and VM conversations share `application/conversation.cjs`. Keep pose
+confirmation, transcript validation and motion guards there; Product adapters
+only relay input/tools. VM updates use GAR's `product_hook` with
+`gar-simulator.json`; build, deploy and start are separate operations, and diag
+checks snapshot hashes plus the running panel and App build IDs.
+
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
 `scripts/run-face.cjs`; it must not choose expressions. The face application reads

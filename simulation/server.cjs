@@ -49,7 +49,7 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
           if(req.method==='HEAD'){res.writeHead(200,{'Content-Type':'text/event-stream'});return res.end();}
           stream.add(req,res);return;
         }
-        if(route==='/health')return json(200,{ok:bridge.status().displayReady,product:'orange-pi-face-lab',pid:process.pid,host,io:bridge.status()});
+        if(route==='/health'){await body.refresh?.();return json(200,{ok:bridge.status().displayReady,product:'orange-pi-face-lab',pid:process.pid,buildId:process.env.GAR_BUILD_ID||null,appBuildId:body.buildId||null,host,io:bridge.status()});}
         if(route==='/api/state'){await body.refresh?.();return json(200,{...bridge.state(),body:body.state(),live:live.state()});}
         if(route==='/api/body/config')return json(200,{servos:body.configuration()});
         if(route==='/api/io/frame'){
@@ -70,7 +70,7 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
       if((req.headers.origin&&!origins.includes(req.headers.origin))||req.headers['sec-fetch-site']==='cross-site')throw new RequestError('Cross-site input is not accepted',403);
       if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']||''))throw new RequestError('Send JSON',415);
       const chunks=[];let length=0;
-      for await(const chunk of req){length+=chunk.length;if(length>(route==='/api/live'?4096:1024))throw new RequestError('Input too large',413);chunks.push(chunk);}
+      for await(const chunk of req){length+=chunk.length;if(length>(route==='/api/live'?16384:1024))throw new RequestError('Input too large',413);chunks.push(chunk);}
       let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new RequestError('Invalid JSON');}
       if(route==='/api/live'){try{return json(200,await live.handle(input));}catch(error){throw new RequestError(error.message,error.status||400);}}
       if(route==='/api/body'){

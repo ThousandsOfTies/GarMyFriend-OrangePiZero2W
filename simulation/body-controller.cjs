@@ -31,7 +31,7 @@ class BodyController{
   }
   async refresh(){
     if(!this.enabled||this.closed)return;
-    try{const value=await requestControl(this.socket,{type:'state'},{timeoutMs:1000});this.value=value.body;this.expression=value.expression;}
+    try{const value=await requestControl(this.socket,{type:'state'},{timeoutMs:1000});this.value=value.body;this.expression=value.expression;this.buildId=value.buildId;}
     catch{this.value={...this.value,ready:false,error:'Waiting for the common application'};}
   }
   async command(input){

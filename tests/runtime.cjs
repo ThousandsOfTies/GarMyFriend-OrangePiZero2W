@@ -52,16 +52,36 @@ test('conversation lease isolates tabs, deduplicates tools and clears playback o
   const live=new LiveController(body);
   try{
     const opened=await live.handle({action:'open'});
-    assert.equal(opened.config.tools.length,3);
+    assert.equal(opened.config.tools.length,4);assert.equal(opened.body.poseConfirmationRequired,true);
     await assert.rejects(live.handle({action:'open'}),/Another conversation/);
     await assert.rejects(live.handle({action:'tool',session:'wrong',id:'x'}),/ended/);
     await live.handle({action:'playback',session:opened.session,playing:true});assert.equal(friend.face.speaking,true);
     const tool={action:'tool',session:opened.session,id:'once',name:'change_emotion',args:{emotion:'happy'}};
     assert.deepEqual(await live.handle(tool),await live.handle(tool));
-    assert.equal(calls.filter(value=>value.type==='tool').length,1);
+    assert.equal(calls.filter(value=>value.type==='conversation'&&value.action==='tool').length,1);
     await assert.rejects(live.handle({action:'tool',session:opened.session,id:'bad',name:'shell',args:{}}),/Unknown tool/);
     await live.handle({action:'close',session:opened.session});assert.equal(friend.face.speaking,false);assert.equal(live.state().active,false);
     await assert.rejects(live.handle({action:'heartbeat',session:opened.session}),/ended/);
+  }finally{await live.dispose();}
+});
+
+test('simulator transport shares native pose confirmation and forgets it on a new connection',async()=>{
+  const movements=[],friend=new FriendRuntime({servo:{async perform(mode,options){movements.push({mode,options});return true;}}});
+  const body={enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value)},live=new LiveController(body);
+  try{
+    const opened=await live.handle({action:'open'}),session=opened.session;
+    const tool=(id,name,args)=>live.handle({action:'tool',session,id,name,args,from:'stand'});
+    assert.equal((await tool('blocked','move_body',{mode:'lie'})).status,'blocked','A supplied dropdown pose cannot arm voice control');
+    await live.handle({action:'input',session,input:{role:'user',text:'今は立っています'}});
+    assert.equal((await tool('confirmed','confirm_body_pose',{pose:'stand'})).status,'confirmed');
+    assert.equal(movements.length,0);
+    assert.equal((await tool('same-turn','move_body',{mode:'lie'})).reason,'new_motion_request_required');
+    await live.handle({action:'input',session,input:{role:'user',text:'伏せて'}});
+    assert.equal((await tool('motion','move_body',{mode:'lie'})).status,'completed');
+    assert.deepEqual(movements,[{mode:'lie',options:{from:'stand'}}]);
+    await live.handle({action:'close',session});
+    const next=await live.handle({action:'open'});assert.equal(next.body.pose,null);
+    assert.equal((await live.handle({action:'tool',session:next.session,id:'new-motion',name:'move_body',args:{mode:'stand'}})).status,'blocked');
   }finally{await live.dispose();}
 });
 

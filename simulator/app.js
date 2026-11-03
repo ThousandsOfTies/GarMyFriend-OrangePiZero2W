@@ -16,8 +16,8 @@ async function request(url,options={}){
 function connection(ready){status.hidden=ready;status.textContent='液晶ドライバーとの接続を確認中';}
 function updateBody(state){
   const body=state.body,ready=body?.ready&&state.pwm?.ready;
-  for(const button of buttons)button.disabled=!ready||(button.dataset.mode!=='stop'&&(body.running||body.stopping||sending));
-  pose.disabled=Boolean(body?.running||body?.stopping||sending);
+  for(const button of buttons)button.disabled=!ready||(button.dataset.mode!=='stop'&&(state.live?.active||body.running||body.stopping||sending));
+  pose.disabled=Boolean(state.live?.active||body?.running||body?.stopping||sending);
   bodyStatus.textContent=body?.error||(!ready?'サーボとの接続を確認中':body.stopping?'停止しています':body.running?`${names[body.mode]} · 実行中`:`${names[body.mode]} · PWM OFF`);
   if(lastRunning&&!body?.running&&!body?.error){if(['stand','forward','backward'].includes(body.mode))pose.value='stand';else if(body.mode==='lie')pose.value='lie';}
   lastRunning=Boolean(body?.running);
