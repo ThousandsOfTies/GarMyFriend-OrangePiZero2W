@@ -138,7 +138,7 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 | 現在の音声姿勢確認用drop-in | `/etc/systemd/system/garmyfriend.service.d/90-live-body-voice.conf` |
 | 停止ファイル・制御ソケット用領域 | `/run/garmyfriend-orangepi-zero2w/` |
 | 機器専用プロフィール | `/etc/garmyfriend/live-broker.json`（garmyfriend所有・0600） |
-| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-voice-pose-20261104` |
+| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-voice-pose-20261104-r2` |
 | 音声姿勢確認前のリリース | `/opt/garmyfriend/releases/arm64-live-body-prompt-20261103` |
 | プロンプト更新前のリリース | `/opt/garmyfriend/releases/arm64-live-speaker-cue-20261103` |
 | USBマイク単独操作の前版 | `/opt/garmyfriend/releases/arm64-live-usb-mic-67ff119-20261103` |
@@ -176,3 +176,16 @@ USB音声には `TSK95K` を指定しています。
   有効化後はアプリの状態で `body.ready=true`、サービスの `active/running` と
   再起動回数0、`GAR_FRIEND_LIVE_BODY=1`、開始姿勢 `stand` を確認。
   利用者が音声で「伏せて」と指示し、実際に伏せたことを確認しました。
+- 2026-11-04、音声で現在姿勢を確認する処理を常設。アプリの自動テストは39件成功・
+  Linuxソケット専用1件はWindowsで対象外。姿勢未確認・誤った確認・同じ返答内での動作・
+  停止・中断・動作失敗・再接続での古い姿勢の再利用を検証しました。
+- 本番Cloud経由のGemini Liveで、挨拶時の姿勢確認、「はい」や「伏せて」だけでは
+  確定しないこと、「今は立っています」の取り込み、その後の新しい「伏せて」で
+  一度だけ仮の制御処理を呼ぶことを確認。停止後の「立って」は再確認を求めました。
+  この試験ではマイク・スピーカー・実機サーボは使っていません。
+- 実機へ反映後、サービスの `active/running`・再起動回数0、アプリの `body.ready=true`、
+  `GAR_FRIEND_START_POSE=ask` と `ready` → `listening` → `speaking`、LCD描画継続を確認。
+  旧一時drop-inを外し、再起動後にも残る常設drop-inと既存の校正CSVを使います。
+  初回は接続後の導入確認で元に戻り、確認処理を見直して `-r2` へ反映しました。
+- 利用者が実物の現在姿勢を音声で伝え、その後の新しい動作指示で実際に脚が動くことを確認。
+  再接続時の状態破棄は模擬接続テストで確認し、実機の長時間運用での評価は今後行います。
