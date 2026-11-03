@@ -25,8 +25,11 @@ and a confirmed --from pose; default conversation is face/audio only.
 Headless Live sessions may alternatively authenticate to the shared Cloud Run
 token broker. Keep the Gemini API key in the existing server-side Secret Manager.
 Provision only a device-specific credential in a private Linux file (mode 0600),
-never Git or logs. Ephemeral Gemini tokens remain in memory. The headless profile
-starts with microphone transmission muted; a physical rotary press toggles it.
+never Git or logs. Ephemeral Gemini tokens remain in memory. The owner confirmed
+the KY-040 is disconnected. The physical GPIO CSV contains LCD lines only; do not
+start or require a rotary reader. The deployed headless profile has no extra
+software mute; the USB speakerphone's top-center button controls its internal
+microphone mute (red muted, blue active). Do not reintroduce a rotary requirement.
 Face-only sessions retry token/session failures with backoff. Body-enabled sessions
 require a newly confirmed starting pose instead of automatic reconnection.
 

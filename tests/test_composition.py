@@ -12,7 +12,7 @@ class ProductComposition(unittest.TestCase):
         product=Product(ROOT).validate()
         report=product.describe()
         self.assertEqual({'application','tools','board'},set(report['components']))
-        self.assertEqual(5,report['validated']['gpio_lines'])
+        self.assertEqual(2,report['validated']['gpio_lines'])
         self.assertEqual(1,report['validated']['spi_devices'])
         self.assertTrue((product.components['board']/'.git').exists())
         self.assertEqual('scripts/run-face.cjs',report['launch']['entrypoint'])

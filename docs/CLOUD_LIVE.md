@@ -11,20 +11,24 @@ Gemini Liveに接続します。APIキーの入力やWindowsのWebPanelは必要
 今回の構成ではインターネット接続にPC側のUSBネットワーク・通信共有を使います。
 PCが不要なネットワーク構成そのものへ変更したわけではありません。
 
-起動直後は **マイク音声の送信停止** で、スピーカーから短い挨拶を再生します。
-液晶と一緒に接続した **KY-040の回転つまみを押し込む** と送信を開始し、もう一度押すと停止します。
-「ノブ」はこの部品です。スピーカーフォン上面のボタンとは別です。
-送信停止中もALSAによる音声取得は継続しますが、音声ファイルを保存せず、PCMをGeminiへ送りません。
-音声取得そのものを停止するにはサービスを停止するかUSB機器を外します。
+起動するとスピーカーから短い挨拶を再生し、USBマイクで会話を待ち受けます。
+**スピーカーフォン上面の中央マイクボタンだけ** で操作します。
+青LEDのときに話しかけ、使わないときは同じボタンを押して赤LEDへ戻します。
+2026-11-03に利用者がKY-040をつないでいないことを確認したため、実機のGPIO CSVから
+encoder行を外し、読み取りプログラムを起動しない構成へ修正しました。KY-040は不要です。
 
 スピーカーフォンPR-SK95CK中央のボタンは機器側のマイクミュートです。
 [メーカー説明書](https://tamadenco.co.jp/products/pdf/2040.pdf)では赤LEDがミュート、青LEDが解除です。
-このボタンとアプリの送信状態はまだ同期していません。会話の試験時は機器側のミュートも解除してください。
+このボタンは機器内部で消音し、アプリ側には二重のミュートを設けていません。
+今回、赤LEDへ変更してもALSAの `Mic Capture Switch` はonのままで、USBキーイベントも取得できませんでした。
+アプリはLEDを読み取って同期しているわけではなく、機器が出力するPCMを扱います。
+赤LEDでもGemini接続と音声取得・送信の処理は継続し、音声ファイルは保存しません。
+音声取得そのものを停止するにはサービスを停止するかUSB機器を外します。
 USBスピーカーのALSA音量は初回に0だったため、30%へ変更しました。実際に聞こえる音量は利用者が確認します。
 
 今回の自動起動は会話・表情・口パクだけです。身体の自動操作は有効にしていません。
 接続やトークンの期限切れ時には新しいトークンを取得し、最大60秒の間隔で再接続します。
-その際も送信停止の状態を保持します。再接続では会話は新しいセッションになります。
+再接続では会話は新しいセッションになります。マイクの消音はUSB機器側のボタンで操作します。
 身体を明示的に有効にしたCLIセッションは、切断後の開始姿勢の再確認を必要とします。
 
 ## 構成と再利用部分
@@ -55,8 +59,8 @@ FirestoreのトランザクションでCloud Runの複数インスタンス間�
 | gar-tools | `targets/linux-device/runtime/gemini-live/broker.cjs`：機器プロフィール読込・HTTPS取得 |
 | gar-tools | `web-simulator/components/gemini-live.mjs`：APIキーと短期トークンに対応した共有Live通信 |
 | gar-my-friend | `application/managed-live.cjs`：更新・再接続、`live-runtime.cjs`：音声と会話の接続 |
-| gar-my-friend | `face.cjs`：KY-040押下とマイク送信状態、表情と口パク |
-| Product | 実機設定、起動時の送信停止、固定するsubmodule、配布と導入 |
+| gar-my-friend | `face.cjs`：任意のKY-040入力、表情と口パク。GPIO CSVにencoderがなければ読取を起動しない |
+| Product | 実機設定、追加ソフトミュートの解除、固定するsubmodule、配布と導入 |
 
 WebPanelの認証・入力部品はこの変更では追加していません。
 共有クライアントは、独立した2つの機器プロフィールと2つのLive通信インスタンスで検証しました。
@@ -67,11 +71,14 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 | --- | --- |
 | 起動サービス | `garmyfriend.service`（従来のサービスを維持） |
 | Live用drop-in | `/etc/systemd/system/garmyfriend.service.d/60-live-broker.conf` |
+| USBマイク単独操作用drop-in | `/etc/systemd/system/garmyfriend.service.d/70-usb-microphone.conf` |
 | 機器専用プロフィール | `/etc/garmyfriend/live-broker.json`（garmyfriend所有・0600） |
-| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-broker-17b1f2c-20261103` |
+| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-usb-mic-67ff119-20261103` |
+| KY-040を要求していた前のリリース | `/opt/garmyfriend/releases/arm64-live-broker-17b1f2c-20261103` |
 | 顔のみの旧リリース | `/opt/garmyfriend/releases/arm64-penguin-8fe10a9-20261103` |
 
-実機のGPIO/SPI CSVは前の動作確認済み配置から引き継ぎ、USB音声には `TSK95K` を指定しました。
+実機のLCD用GPIO/SPI設定は前の動作確認済み配置から引き継ぎ、未接続のencoder行を除きました。
+USB音声には `TSK95K` を指定しています。
 認証情報は公開用の配布物・Git・ログに含めません。再登録・失効は機器ごとに行います。
 
 ## 確認結果
@@ -82,4 +89,6 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 - Linuxで実際のALSA代用プロセス・口パク・再接続・停止を検証。
 - 実機サービスは再起動回数0で `active/running`。
 - 実機ログに `authenticating` → `connecting` → `ready` → `muted` → `speaking` → `muted`、液晶描画の継続を確認。
-- 実際のUSBマイク・スピーカーを開き、返答PCMの再生プロセスが正常終了。利用者に聞こえる音と、話しかけて返事を得る試験は確認待ち。
+- 実際のUSBマイク・スピーカーを開き、返答PCMの再生プロセスが正常終了。
+- KY-040なしの設定へ更新後、`Rotary input disabled` と、回転つまみ用子プロセスが存在しないことを確認。
+- 利用者が上面マイクボタンを青LEDへ切り替えて話しかけ、返事が聞こえることを確認済み。
