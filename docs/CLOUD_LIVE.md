@@ -89,7 +89,8 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 | Live用drop-in | `/etc/systemd/system/garmyfriend.service.d/60-live-broker.conf` |
 | USBマイク単独操作用drop-in | `/etc/systemd/system/garmyfriend.service.d/70-usb-microphone.conf` |
 | 機器専用プロフィール | `/etc/garmyfriend/live-broker.json`（garmyfriend所有・0600） |
-| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-speaker-cue-20261103` |
+| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-body-prompt-20261103` |
+| プロンプト更新前のリリース | `/opt/garmyfriend/releases/arm64-live-speaker-cue-20261103` |
 | USBマイク単独操作の前版 | `/opt/garmyfriend/releases/arm64-live-usb-mic-67ff119-20261103` |
 | KY-040を要求していた前のリリース | `/opt/garmyfriend/releases/arm64-live-broker-17b1f2c-20261103` |
 | 顔のみの旧リリース | `/opt/garmyfriend/releases/arm64-penguin-8fe10a9-20261103` |
@@ -110,7 +111,12 @@ USB音声には `TSK95K` を指定しています。
 - 実際のUSBマイク・スピーカーを開き、返答PCMの再生プロセスが正常終了。
 - KY-040なしの設定へ更新後、`Rotary input disabled` と、回転つまみ用子プロセスが存在しないことを確認。
 - 利用者が上面マイクボタンを青LEDへ切り替えて話しかけ、返事が聞こえることを確認済み。
-- 2026-11-03、短期トークンの設定固定範囲を修正し、検証用Cloud Run経由の実際のGemini Liveで
+- 2026-11-03、短期トークンの設定固定範囲を修正し、検証用・本番Cloud Run経由の実際のGemini Liveで
   「前進してください」「伏せて」を身体命令として受け取り、操作無効の理由を答えることを確認。
   「計画を前進させたい」は相談として応答し、身体操作ツールは呼びませんでした。
   この比較ではマイク・スピーカー・実機サーボを使わず、合成したテキストへの返答を確認しました。
+- API修正は37件の自動テストと専用CIを通過し、検証用・本番それぞれで既存を含む12ルートを確認。
+  本番は `hometeacher-api-00051-z58`、APIコミットは `dca1eb81b352cbf052e0385c44c0d3393bb5b598`。
+- 同日、新しい会話指示を実機へ反映。適用した2ファイルのSHA-256一致、サービスの
+  `active/running`・再起動回数0、`ready` → `listening` → `speaking` とLCD描画の継続を確認。
+  `GAR_FRIEND_LIVE_BODY=0` を保ち、サーボ設定・音声の合図音・配線CSVは変更していません。
