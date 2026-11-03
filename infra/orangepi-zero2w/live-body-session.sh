@@ -15,6 +15,7 @@ native=$base/build/composed-arm64/gar-servoctl
 hardware=$base/hardware/orangepi-zero2w
 test -x "$node"
 test -x "$native"
+test ! -e /etc/systemd/system/garmyfriend.service.d/90-live-body-voice.conf
 if test "$pose" = off; then
     test -f "$dropin"
     grep -q '^# Managed GarMyFriend single body session$' "$dropin"

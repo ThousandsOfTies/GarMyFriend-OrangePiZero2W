@@ -20,7 +20,9 @@ application owns the session and invokes the same semantic tools; gar-tools owns
 raw ALSA streams and the DOM-independent Gemini protocol. No physical audio is
 started by the WebPanel. GEMINI_API_KEY is supplied at launch, removed from child
 process environments, and never saved/logged. Body tools require explicit --body
-and a confirmed --from pose; default conversation is face/audio only.
+with either a confirmed --from pose or --ask-pose. Voice confirmation starts with
+an unknown pose, checks the user's transcribed current-state report, and requires
+a new motion request after confirmation. Default CLI conversation is face/audio only.
 
 Headless Live sessions may alternatively authenticate to the shared Cloud Run
 token broker. Keep the Gemini API key in the existing server-side Secret Manager.
@@ -30,8 +32,11 @@ the KY-040 is disconnected. The physical GPIO CSV contains LCD lines only; do no
 start or require a rotary reader. The deployed headless profile has no extra
 software mute; the USB speakerphone's top-center button controls its internal
 microphone mute (red muted, blue active). Do not reintroduce a rotary requirement.
-Face-only sessions retry token/session failures with backoff. Body-enabled sessions
-require a newly confirmed starting pose instead of automatic reconnection.
+Face-only sessions retry token/session failures with backoff. The deployed headless
+body profile also reconnects, always starting a fresh session with an unknown pose
+and asking by voice. Stop, interruption and failed motion invalidate the pose.
+Explicit --from sessions retain the one-session policy and never reuse their pose
+after reconnection. Do not persist pose reports or treat them as sensor readings.
 
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
