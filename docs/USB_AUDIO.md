@@ -110,4 +110,5 @@ Live会話は同じアプリ内で、入力→Gemini→返答のPCM再生と表�
   capture / playbackはともに `plughw:CARD=TSK95K,DEV=0`。共通アプリの `audio check` でも両方を検出。
   USBの公称フォーマットは録音16kHz・再生48kHz、ともに16bit・2ch（`/proc/asound/card2/stream0`）。
   `arecord` / `aplay` は導入済み。`open_jtalk` は未導入で、日本語のローカル音声合成は未準備。
-  録音・実際の再生・音質・長時間給電は未試験。顔サービスのaudio権限は、準備済みの更新スクリプトで追加する。
+  顔サービスのユーザー `garmyfriend` にaudioグループを追加し、サービスを再起動しました。
+  録音・実際の再生・音質・長時間給電は未試験。

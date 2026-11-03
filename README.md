@@ -22,6 +22,8 @@
 
 *現在の描画画面です。上の完成イメージとは別に、動作中のアプリの出力を表示しています。*
 
+2026-11-03に、このペンギン顔のARM64描画プログラムと表情データを実機へ更新しました。液晶への継続出力と、利用者による実際のペンギン表示を確認済みです。[実機更新の記録](docs/DEVICE_FACE_UPDATE.md)
+
 開発時は共通の顔アプリとサーボ制御をVirtualBoxのLinux上で動かし、WebPanelを実物の部品の代わりに使います。円形液晶・PCA9685・4サーボ・USBスピーカーフォンを並べ、PCの音声でGemini Liveと会話しながら表情・身体モードを試せます。[音声会話の使い方](docs/LIVE_PANEL.md)。ロータリーの接続は不要です。
 
 手持ちノブの型番は **[KY-040](hardware/modules/KY-040.md)**。液晶は **[YMS PARTS 1.28インチ円形IPS・7ピン](hardware/modules/round-lcd-7pin.md)**（商品モデル番号 YMS-circlelcd-pinari）として記録しています。[実機の配線表](hardware/WIRING.md)はVMの仮想GPIO番号と区別して管理します。
