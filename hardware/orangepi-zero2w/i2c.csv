@@ -1,0 +1,2 @@
+name,bus,dev,address,driver,sim,description
+pca9685-1,1,/dev/i2c-1,0x40,pca9685,pca9685,Header I2C1 SDA pin3 PI8 and SCL pin5 PI7; new wiring unverified

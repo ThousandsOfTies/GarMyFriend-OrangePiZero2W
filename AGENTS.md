@@ -1,9 +1,52 @@
 # GarMyFriend-OrangePiZero2W scope
 
-The user's current WebPanel scope is exactly two physical substitutes: the
-GC9A01 face display and a rotary encoder. Preserve the shared parts' appearance
-and basic input. Do not add dashboards, sensor controls, servos, scenarios,
-record/replay, direct expression selectors or execution controls to this scope.
+The user's current WebPanel scope is the GC9A01 face display, PCA9685 and four
+SG90 servos, USB speakerphone using PC audio, and Gemini Live conversation with
+App-owned expression/body tools. Include Product-level forward/backward/stop/lie/stand controls. The
+rotary encoder is not required in the current composition. Preserve the shared
+parts' appearance. Do not add unrelated dashboards, sensors, scenarios,
+record/replay or direct expression selectors. Body commands invoke the actual
+native controller against virtual I2C in the dedicated Linux simulator; the
+panel must never route these commands to a physical board.
+
+The browser's microphone/audio is an I/O substitute. Gemini transport and reusable
+speakerphone UI belong in gar-tools; App instructions, tool schemas and execution
+belong in gar-my-friend. Product adapters relay tools to the running VM application
+over its optional local control socket. Render only actual SPI pixels and native
+I2C output. The panel uses the same Cloud token broker as the physical device,
+with a separate simulator credential in a private VM file outside the artifact.
+The browser receives only a fresh ephemeral token for its current conversation;
+never return the device secret or Gemini API key, persist tokens, or log them.
+Credential issuance is restricted to the localhost panel and its active lease.
+
+Physical USB conversation is separately opt-in via scripts/live.cjs. The common
+application owns the session and invokes the same semantic tools; gar-tools owns
+raw ALSA streams and the DOM-independent Gemini protocol. No physical audio is
+started by the WebPanel. GEMINI_API_KEY is supplied at launch, removed from child
+process environments, and never saved/logged. Body tools require explicit --body
+with either a confirmed --from pose or --ask-pose. Voice confirmation starts with
+an unknown pose, checks the user's transcribed current-state report, and requires
+a new motion request after confirmation. Default CLI conversation is face/audio only.
+
+Headless Live sessions may alternatively authenticate to the shared Cloud Run
+token broker. Keep the Gemini API key in the existing server-side Secret Manager.
+Provision only a device-specific credential in a private Linux file (mode 0600),
+never Git or logs. Ephemeral Gemini tokens remain in memory. The owner confirmed
+the KY-040 is disconnected. The physical GPIO CSV contains LCD lines only; do not
+start or require a rotary reader. The deployed headless profile has no extra
+software mute; the USB speakerphone's top-center button controls its internal
+microphone mute (red muted, blue active). Do not reintroduce a rotary requirement.
+Face-only sessions retry token/session failures with backoff. The deployed headless
+body profile also reconnects, always starting a fresh session with an unknown pose
+and asking by voice. Stop, interruption and failed motion invalidate the pose.
+Explicit --from sessions retain the one-session policy and never reuse their pose
+after reconnection. Do not persist pose reports or treat them as sensor readings.
+
+Native and VM conversations share `application/conversation.cjs`. Keep pose
+confirmation, transcript validation and motion guards there; Product adapters
+only relay input/tools. VM updates use GAR's `product_hook` with
+`gar-simulator.json`; build, deploy and start are separate operations, and diag
+checks snapshot hashes plus the running panel and App build IDs.
 
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in

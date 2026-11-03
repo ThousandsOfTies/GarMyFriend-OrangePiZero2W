@@ -17,8 +17,12 @@
     "directory": "build/composed-arm64",
     "outputs": [
       "device-output",
-      "gar_rotary_input"
-    ]
+      "gar_rotary_input",
+      "gar-servoctl"
+    ],
+    "environment": {
+      "GAR_BUILD_SERVO": "1"
+    }
   },
   "launch": {
     "entrypoint": "scripts/run-face.cjs"
@@ -32,14 +36,35 @@
   "deployment": {
     "root": "/opt/garmyfriend",
     "user": "garmyfriend",
-    "legacy_services": ["garmyfriend.service"]
+    "legacy_services": [
+      "garmyfriend.service"
+    ],
+    "runtime_directory": "garmyfriend-orangepi-zero2w",
+    "supplementary_groups": [
+      "i2c",
+      "audio"
+    ]
   },
   "payload": [
     "product.json",
     "scripts/run-face.cjs",
+    "scripts/body.cjs",
+    "scripts/audio.cjs",
+    "scripts/live.cjs",
     "hardware/orangepi-zero2w",
     "sources/gar-my-friend/application",
+    "sources/gar-my-friend/tools/body.cjs",
+    "sources/gar-my-friend/tools/audio.cjs",
+    "sources/gar-my-friend/tools/live.cjs",
+    "sources/gar-my-friend/tools/say.cjs",
+    "sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.cjs",
+    "sources/gar-tools/targets/linux-device/runtime/alsa-audio/duplex.cjs",
+    "sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.cjs",
+    "sources/gar-tools/web-simulator/components/gemini-live.mjs",
+    "sources/gar-tools/web-simulator/components/audio-pcm.mjs",
     "sources/gar-my-friend/firmware",
-    "sources/gar-my-friend/shared"
+    "sources/gar-my-friend/shared",
+    "hardware/components.csv",
+    "hardware/connections.csv"
   ]
 }

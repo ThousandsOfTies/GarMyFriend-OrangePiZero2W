@@ -1,0 +1,5 @@
+name,channel,role,direction,min_us,neutral_us,max_us,max_rate_us_per_s,calibrated
+servo-1,0,front-left,-1,1300,1500,1700,400,1
+servo-2,1,front-right,1,1300,1500,1700,400,1
+servo-3,2,rear-left,-1,1300,1500,1700,400,1
+servo-4,3,rear-right,1,1300,1500,1700,400,1

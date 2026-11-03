@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>GarMyFriend</title>
-  <link rel="stylesheet" href="/simulator/style.css">
+  <title>GarMyFriend · 顔とサーボ</title>
+  <link rel="stylesheet" href="/simulator/body.css">
   <script type="module" src="/simulator/app.js"></script>
+  <script type="module" src="/simulator/live.js"></script>
 </head>
 <body>
   <main>
+    <header class="page-heading"><div><p class="eyebrow">ORANGE PI ZERO 2W</p><h1>顔と、4つの脚。</h1></div><span class="simulation-badge">仮想I2C · 実機へ送信しません</span></header>
     <section class="part display-part" aria-labelledby="display-title">
       <h2 id="display-title">顔のディスプレイ</h2>
       <div class="display-module">
@@ -17,9 +19,48 @@
       </div>
       <p class="part-label">GC9A01 · 240 × 240</p>
     </section>
-    <section class="part rotary-part" aria-labelledby="rotary-title">
-      <h2 id="rotary-title">ノブで表情を変える</h2>
-      <gar-rotary id="rotary" label="KY-040 · ROTARY ENCODER" disabled></gar-rotary>
+    <section class="part audio-part" aria-labelledby="audio-title">
+      <h2 id="audio-title">声で話しかける</h2>
+      <gar-speakerphone id="speakerphone" label="USBスピーカーフォン · PCの音声入出力で代替"></gar-speakerphone>
+      <p class="section-note">APIキーの入力は不要です。そのまま会話を始められます。</p>
+      <details class="live-settings"><summary>声の設定</summary><label class="live-label">声<input id="live-voice" value="Puck" spellcheck="false"></label></details>
+      <div class="live-buttons"><button id="live-start" disabled>会話を始める</button><button id="live-stop" disabled>停止</button></div>
+      <p id="live-status" role="status">アプリとの接続を確認中</p>
+      <p id="live-input-status" class="section-note">音声入力：停止中</p>
+      <p class="section-note">最初に今の姿勢を尋ねます。「今は立っています」「今は伏せています」と答えてから、動作を指示してください。</p>
+      <form id="live-text-form"><label for="live-text">文字でも話しかける</label><div><input id="live-text" maxlength="2000" disabled placeholder="今は立っています"><button id="live-send" disabled>送信</button></div></form>
+      <ol id="live-transcript" aria-label="今回の会話" role="log"></ol>
+      <p id="live-tool" class="section-note"></p>
+      <p class="section-note">音声はGeminiへ送信します。顔・脚の操作先はVM内の仮想部品です。実機へは送信しません。</p>
+    </section>
+    <section class="part body-part" aria-labelledby="body-title">
+      <h2 id="body-title">身体を動かす</h2>
+      <p class="section-note">実機と共通のC制御を、Linuxの仮想デバイスで実行します。</p>
+      <label class="pose-label" for="start-pose">手動操作の開始姿勢 <select id="start-pose"><option value="stand">立っている</option><option value="lie">伏せている</option></select></label>
+      <div class="mode-buttons" role="group" aria-label="身体の動作">
+        <button data-mode="forward" disabled>↑ 前進</button>
+        <button data-mode="backward" disabled>↓ 後進</button>
+        <button data-mode="lie" disabled>伏せ</button>
+        <button data-mode="stand" disabled>立ち上がり</button>
+        <button data-mode="stop" class="stop" disabled>■ 止まる</button>
+      </div>
+      <p id="body-status" role="status">サーボとの接続を確認中</p>
+      <p class="section-note">1回で終了する動作です。終了後はPWMをOFFにします。接地・重力・歩ける距離は再現しません。</p>
+    </section>
+    <section class="part controller-part" aria-labelledby="controller-title">
+      <h2 id="controller-title">PWMコントローラー</h2>
+      <gar-pca9685 id="pca9685-1" address="0x40" device="/dev/i2c-10" appearance="channels"></gar-pca9685>
+      <p class="part-label">SDA → pin 3 · SCL → pin 5 · VCC → 3.3V · V+ → 外部5V</p>
+    </section>
+    <section class="part servos-part" aria-labelledby="servos-title">
+      <h2 id="servos-title">SG90 × 4 <small>PWMからの角度プレビュー</small></h2>
+      <div class="servo-grid">
+        <div><h3>左前 · CH0</h3><gar-sg90 id="servo-1" controller-id="pca9685-1" channel="0" appearance="compact"></gar-sg90></div>
+        <div><h3>右前 · CH1</h3><gar-sg90 id="servo-2" controller-id="pca9685-1" channel="1" appearance="compact"></gar-sg90></div>
+        <div><h3>左後ろ · CH2</h3><gar-sg90 id="servo-3" controller-id="pca9685-1" channel="2" appearance="compact"></gar-sg90></div>
+        <div><h3>右後ろ · CH3</h3><gar-sg90 id="servo-4" controller-id="pca9685-1" channel="3" appearance="compact"></gar-sg90></div>
+      </div>
+      <p class="section-note">ホーンは校正した範囲内の相対表示です。実際の脚角度・姿勢とは異なります。</p>
     </section>
     <p id="status" role="status">部品との接続を確認中</p>
   </main>

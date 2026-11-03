@@ -9,6 +9,7 @@ import subprocess
 import tarfile
 import time
 import urllib.request
+import urllib.error
 import webbrowser
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -30,7 +31,8 @@ def scp(source,destination):
 
 def archive():
     STATE.mkdir(parents=True,exist_ok=True)
-    items=['sources/gar-my-friend/application','sources/gar-my-friend/firmware','sources/gar-my-friend/shared/expressions.json','sources/gar-my-friend/tools/build-native.sh','scripts/run-face.cjs','simulation','simulator','hardware','infra','tests/vm-parts.py','sources/gar-tools/targets/linux-device/runtime/gc9a01-output','sources/gar-tools/targets/linux-device/runtime/gc9a01-stub','sources/gar-tools/targets/linux-device/runtime/ili9341-stub','sources/gar-tools/targets/linux-device/runtime/rotary-input','sources/gar-tools/targets/linux-device/runtime/web-bridge','sources/gar-tools/web-simulator/components/display.mjs','sources/gar-tools/web-simulator/components/framebuffer.mjs','sources/gar-tools/web-simulator/components/rotary.mjs']
+    items=['product.json','sources/gar-my-friend/application','sources/gar-my-friend/firmware','sources/gar-my-friend/shared','sources/gar-my-friend/tools/build-native.sh','sources/gar-my-friend/tools/body.cjs','sources/gar-my-friend/dependencies/gar-servo-pet/src','scripts/run-face.cjs','simulation','simulator','hardware','infra','tests/vm-parts.py','sources/gar-tools/targets/linux-device/runtime/gc9a01-output','sources/gar-tools/targets/linux-device/runtime/gc9a01-stub','sources/gar-tools/targets/linux-device/runtime/ili9341-stub','sources/gar-tools/targets/linux-device/runtime/i2c-stub','sources/gar-tools/targets/linux-device/runtime/rotary-input','sources/gar-tools/targets/linux-device/runtime/web-bridge','sources/gar-tools/web-simulator/components']
+    items.append('sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.cjs')
     def keep(info):
         parts=Path(info.name).parts
         if '.git' in parts or '__pycache__' in parts or 'node_modules' in parts or info.name.startswith('simulator/gar-components'):return None
@@ -78,8 +80,34 @@ def publish(open_page=False):
         except Exception as exc:error=exc;time.sleep(1)
     raise RuntimeError('HTTPS health check failed: '+str(error))
 
+def local_panel(open_page=False):
+    """Expose this VM's loopback panel through a local SSH port forward."""
+    url='http://127.0.0.1:8773'
+    def health():
+        with urllib.request.urlopen(url+'/health',timeout=2) as response:value=json.load(response)
+        if value.get('product')!='orange-pi-face-lab' or value.get('host',{}).get('environment')!='virtualbox-linux':
+            raise ValueError('Local port 8773 belongs to another service')
+        return value
+    try:
+        value=health()
+    except (OSError,urllib.error.URLError):
+        STATE.mkdir(parents=True,exist_ok=True)
+        with (STATE/'local-tunnel.log').open('ab') as log:
+            child=subprocess.Popen([*SSH,'-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=20',
+                '-N','-L','127.0.0.1:8773:127.0.0.1:8773'],cwd=ROOT,stdin=subprocess.DEVNULL,
+                stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+        (STATE/'local-tunnel.pid').write_text(str(child.pid)+'\n')
+        for _ in range(40):
+            if child.poll() is not None:raise RuntimeError('Local SSH connection failed; inspect .gar/vm/local-tunnel.log')
+            try:value=health();break
+            except (OSError,urllib.error.URLError):time.sleep(.25)
+        else:raise RuntimeError('VM panel did not become ready through local SSH')
+    (STATE/'panel.json').write_text(json.dumps({'url':url,'vm':NAME,'mode':'local-ssh','health':value},indent=2)+'\n')
+    print(url)
+    if open_page:webbrowser.open(url)
+
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('command',choices=['start','stop','status','deploy','publish','open']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('command',choices=['start','stop','status','deploy','publish','local','open']);args=parser.parse_args()
     if args.command=='deploy':deploy()
     elif args.command=='publish':publish()
     elif args.command=='stop':run([VBOX,'controlvm',NAME,'acpipowerbutton'])
@@ -87,8 +115,8 @@ def main():
         info=run([VBOX,'showvminfo',NAME,'--machinereadable'],capture=True).stdout
         if 'VMState="running"' not in info:run([VBOX,'startvm',NAME,'--type','headless'])
         print('VM is running. npm run vm:publish refreshes the HTTPS URL after a reboot.')
-    elif args.command=='open':
-        panel=json.loads((STATE/'panel.json').read_text());webbrowser.open(panel['url']);print(panel['url'])
+    elif args.command=='local':local_panel()
+    elif args.command=='open':local_panel(open_page=True)
     else:
         info=run([VBOX,'showvminfo',NAME,'--machinereadable'],capture=True).stdout
         print('\n'.join(line for line in info.splitlines() if line.startswith(('VMState=','memory=','cpus='))))

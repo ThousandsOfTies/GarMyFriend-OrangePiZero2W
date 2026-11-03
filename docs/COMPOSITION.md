@@ -4,17 +4,19 @@
 
 | 役割 | submodule | 所有するもの |
 | --- | --- | --- |
-| アプリ | `sources/gar-my-friend` | 表情・まばたき・描画・GPIO/SPIによるアプリ入出力 |
+| アプリ | `sources/gar-my-friend` | 表情・まばたき・描画・GPIO/SPIによるアプリ入出力と任意の身体・発話の連動 |
 | 共通機構 | `sources/gar-tools` | 汎用デバイス処理、構成の検査、ビルド・配布物・起動ファイルの生成 |
 | 基板 | `sources/board-orangepi-zero2w` | ピン資源、対応OS・ABI、SDKレイアウト、起動順、基板固有資産 |
 
 組み立て指定は[product.json](../product.json)です。アプリと共通機構はOrange Pi版・Lyra版で同じソースを使い、基板と配線を選び替えます。
+身体のC制御はアプリ内の `dependencies/gar-servo-pet` を固定submoduleとして再利用し、Product直下の3部品の構成を保ちます。
+顔だけのProductは追加CSVを持たずに従来の動作を維持できます。追加配線・音声の準備は[統合手順](SERVO_AND_SPEECH.md)を参照してください。
 基板の資源表は確認済みの一部端子に限られます。全端子の保証ではありません。
 
 ## 手元で見る
 
 ```sh
-git clone --recurse-submodules --branch feature/board-composition https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W.git
+git clone --recurse-submodules --branch feature/friend-actuators https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W.git
 cd GarMyFriend-OrangePiZero2W
 python tools/product.py describe
 python tools/product.py validate
@@ -22,8 +24,8 @@ python tools/product.py validate
 
 `describe`は実際のsubmoduleのコミット、OS、起動方式、配線ファイル、起動指定を表示します。
 `validate`はProductのGPIO/SPI割当を選択した基板プロファイルと照合します。どちらも実機にアクセスしません。
-現在の変更は[ドラフトPR #2](https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W/pull/2)にあります。
-上のコマンドは、まだmainへマージしていない構成変更のブランチを選びます。
+基板分離の[ドラフトPR #2](https://github.com/ThousandsOfTies/GarMyFriend-OrangePiZero2W/pull/2)の上に、身体・発話の追加を重ねています。
+上のコマンドは、追加を含む `feature/friend-actuators` ブランチを選びます。
 
 ## ビルドと生成物
 
@@ -46,7 +48,7 @@ SDK、ROM、コンパイラー本体は同梱しません。新しい配布物�
 ## 境界
 
 - 基板repo: どの端子・SPI・OS・toolchainを利用できるか。
-- Productの`hardware/`: そのうちどの端子へ液晶とノブを接続し、どの速度・デバウンス値で使うか。
+- Productの`hardware/`: 液晶・入力・PCA9685の接続先と速度、サーボの校正値と身体の動作列。
 - アプリrepo: ノブの入力にどう反応して何を描画するか。
 - gar-tools: 指定を読み、検査・ビルド・起動管理をどう実行するか。
 
