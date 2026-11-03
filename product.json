@@ -59,6 +59,7 @@
     "sources/gar-my-friend/tools/say.cjs",
     "sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.cjs",
     "sources/gar-tools/targets/linux-device/runtime/alsa-audio/duplex.cjs",
+    "sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.cjs",
     "sources/gar-tools/web-simulator/components/gemini-live.mjs",
     "sources/gar-tools/web-simulator/components/audio-pcm.mjs",
     "sources/gar-my-friend/firmware",

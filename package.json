@@ -27,7 +27,7 @@
     "sim:status": "python tools/vm.py status",
     "test:vm": "node tests/vm-body.cjs",
     "test:live": "node tests/live-panel.cjs",
-    "test:native-live": "node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/duplex.test.cjs tests/native-live.cjs",
+    "test:native-live": "node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/duplex.test.cjs sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.test.cjs tests/native-live.cjs",
     "compose": "python tools/product.py describe",
     "compose:check": "python tools/product.py validate",
     "compose:package": "python tools/product.py package",

@@ -22,6 +22,14 @@ started by the WebPanel. GEMINI_API_KEY is supplied at launch, removed from chil
 process environments, and never saved/logged. Body tools require explicit --body
 and a confirmed --from pose; default conversation is face/audio only.
 
+Headless Live sessions may alternatively authenticate to the shared Cloud Run
+token broker. Keep the Gemini API key in the existing server-side Secret Manager.
+Provision only a device-specific credential in a private Linux file (mode 0600),
+never Git or logs. Ephemeral Gemini tokens remain in memory. The headless profile
+starts with microphone transmission muted; a physical rotary press toggles it.
+Face-only sessions retry token/session failures with backoff. Body-enabled sessions
+require a newly confirmed starting pose instead of automatic reconnection.
+
 Application behavior belongs in the `gar-my-friend` submodule at
 `sources/gar-my-friend/application/`. Keep Product launch configuration in
 `scripts/run-face.cjs`; it must not choose expressions. The face application reads
