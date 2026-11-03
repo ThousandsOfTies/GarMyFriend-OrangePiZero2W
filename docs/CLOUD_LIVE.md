@@ -73,12 +73,14 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 | Live用drop-in | `/etc/systemd/system/garmyfriend.service.d/60-live-broker.conf` |
 | USBマイク単独操作用drop-in | `/etc/systemd/system/garmyfriend.service.d/70-usb-microphone.conf` |
 | 機器専用プロフィール | `/etc/garmyfriend/live-broker.json`（garmyfriend所有・0600） |
-| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-usb-mic-67ff119-20261103` |
+| 現在のリリース | `/opt/garmyfriend/releases/arm64-live-speaker-cue-20261103` |
+| USBマイク単独操作の前版 | `/opt/garmyfriend/releases/arm64-live-usb-mic-67ff119-20261103` |
 | KY-040を要求していた前のリリース | `/opt/garmyfriend/releases/arm64-live-broker-17b1f2c-20261103` |
 | 顔のみの旧リリース | `/opt/garmyfriend/releases/arm64-penguin-8fe10a9-20261103` |
 
 実機のLCD用GPIO/SPI設定は前の動作確認済み配置から引き継ぎ、未接続のencoder行を除きました。
 USB音声には `TSK95K` を指定しています。
+話し始めの聞こえ方を比較するため、現在は返事の前に控えめな合図音を入れています。[比較の設定・記録](AUDIO_START.md)
 認証情報は公開用の配布物・Git・ログに含めません。再登録・失効は機器ごとに行います。
 
 ## 確認結果
