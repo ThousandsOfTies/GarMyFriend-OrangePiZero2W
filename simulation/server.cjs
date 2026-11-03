@@ -24,11 +24,15 @@ function validateInput(value){
   if(value.action==='press'&&keys.length===1)return;
   throw new RequestError('Expected a rotary rotation (-1/1) or press');
 }
-function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,bodyController,publicOrigin=process.env.ROBOT_PANEL_ORIGIN,environment=process.env.GAR_SIM_ENVIRONMENT||'local-host'}={}){
+function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,bodyController,liveCredentials,publicOrigin=process.env.ROBOT_PANEL_ORIGIN,environment=process.env.GAR_SIM_ENVIRONMENT||'local-host'}={}){
   root=fs.realpathSync(root);
   const bridge=deviceBridge||new DeviceBridge(),origin=parsePublicOrigin(publicOrigin);
   const body=bodyController||new BodyController({root,environment});
-  const live=new LiveController(body);
+  if(liveCredentials===undefined&&process.env.GAR_LIVE_BROKER_CONFIG){
+    const {loadProfile,requestToken}=require('../sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.cjs');
+    liveCredentials=({signal})=>requestToken(loadProfile(process.env.GAR_LIVE_BROKER_CONFIG),{signal});
+  }
+  const live=new LiveController(body,{credentials:liveCredentials});
   const stream=new PanelStream({bridge,body,live});
   const host={environment,platform:process.platform,arch:process.arch,hostname:os.hostname()};
   const server=http.createServer(async(req,res)=>{
@@ -72,7 +76,10 @@ function createSimulatorServer({root=path.resolve(__dirname,'..'),deviceBridge,b
       const chunks=[];let length=0;
       for await(const chunk of req){length+=chunk.length;if(length>(route==='/api/live'?16384:1024))throw new RequestError('Input too large',413);chunks.push(chunk);}
       let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new RequestError('Invalid JSON');}
-      if(route==='/api/live'){try{return json(200,await live.handle(input));}catch(error){throw new RequestError(error.message,error.status||400);}}
+      if(route==='/api/live'){
+        if(input?.action==='credentials'&&(!local.includes(req.headers.host)||req.headers['cf-ray']||req.headers['cf-connecting-ip']||req.headers['forwarded']||req.headers['x-forwarded-host']))throw new RequestError('Cloud conversation requires the local panel',403);
+        try{return json(200,await live.handle(input));}catch(error){throw new RequestError(error.message,error.status||400);}
+      }
       if(route==='/api/body'){
         try{validateBodyInput(input);}catch(error){throw new RequestError(error.message);}
         return json(200,{ok:true,body:await body.command(input)});

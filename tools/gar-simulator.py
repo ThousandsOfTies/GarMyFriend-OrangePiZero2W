@@ -62,6 +62,14 @@ def deploy():
     archive = Path(os.environ['GAR_SIM_BUNDLE']) / 'files/vm.tar.gz'
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     staging = '/home/gar/.gar-myfriend-releases/' + build_id
+    private_profile = ROOT / '.gar/vm/private/live-broker.json'
+    private_directory = '/home/gar/.config/garmyfriend'
+    remote('install -d -m 0700 ' + shlex.quote(private_directory))
+    if private_profile.is_file():
+        vm.scp(private_profile, private_directory + '/live-broker.json')
+        remote('chmod 0600 ' + shlex.quote(private_directory + '/live-broker.json'))
+    remote('test -f ' + shlex.quote(private_directory + '/live-broker.json') +
+           ' && test "$(stat -c %a ' + shlex.quote(private_directory + '/live-broker.json') + ')" = 600')
     remote('mkdir -p ' + shlex.quote(staging))
     vm.scp(archive, staging + '/vm.tar.gz')
     result = remote(f'''set -eu

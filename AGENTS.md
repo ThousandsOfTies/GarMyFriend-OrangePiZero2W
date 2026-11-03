@@ -13,7 +13,11 @@ The browser's microphone/audio is an I/O substitute. Gemini transport and reusab
 speakerphone UI belong in gar-tools; App instructions, tool schemas and execution
 belong in gar-my-friend. Product adapters relay tools to the running VM application
 over its optional local control socket. Render only actual SPI pixels and native
-I2C output. API keys stay in browser session memory; never persist or log them.
+I2C output. The panel uses the same Cloud token broker as the physical device,
+with a separate simulator credential in a private VM file outside the artifact.
+The browser receives only a fresh ephemeral token for its current conversation;
+never return the device secret or Gemini API key, persist tokens, or log them.
+Credential issuance is restricted to the localhost panel and its active lease.
 
 Physical USB conversation is separately opt-in via scripts/live.cjs. The common
 application owns the session and invokes the same semantic tools; gar-tools owns

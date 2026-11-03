@@ -7,9 +7,9 @@ const {config,execute}=require('../sources/gar-my-friend/application/friend-cont
 const {FriendRuntime}=require('../sources/gar-my-friend/application/friend-runtime.cjs');
 
 function fakeLive(){
-  window.testLive={sent:[],errors:[]};
+  window.testLive={sent:[],errors:[],urls:[]};
   window.WebSocket=class{
-    constructor(){this.readyState=1;this.bufferedAmount=0;window.testLive.socket=this;setTimeout(()=>this.onopen?.(),0);}
+    constructor(url){window.testLive.urls.push(url);this.readyState=1;this.bufferedAmount=0;window.testLive.socket=this;setTimeout(()=>this.onopen?.(),0);}
     send(text){const value=JSON.parse(text);window.testLive.sent.push(value);
       if(value.setup)setTimeout(()=>this.deliver({setupComplete:{}}),0);
       if(value.clientContent)setTimeout(()=>this.deliver({serverContent:{outputTranscription:{text:'こんにちは。'},modelTurn:{parts:[{inlineData:{data:btoa(String.fromCharCode(...new Uint8Array(12000))),mimeType:'audio/pcm;rate=24000'}}]}}}),0);
@@ -21,11 +21,17 @@ function fakeLive(){
 async function exercise(page,url,{native=false}={}){
   const failures=[],requests=[];page.on('pageerror',error=>failures.push(error.message));
   page.on('request',request=>{if(request.url().includes('/api/live'))requests.push(request.postData()||'');});
+  let issued=0;
+  if(native)await page.route('**/api/live',async route=>{
+    if(route.request().postDataJSON()?.action==='credentials')return route.fulfill({json:{ephemeralToken:'auth_tokens/fake-vm-'+ ++issued,model:'gemini-3.8-live',apiVersion:'v1alpha',expiresAt:new Date(Date.now()+1800000).toISOString()}});
+    await route.continue();
+  });
   await page.addInitScript(fakeLive);await page.goto(url);
   await page.waitForFunction(()=>!document.querySelector('#live-start').disabled);
-  await page.fill('#live-key','fixture-key-not-real');await page.click('#live-start');
+  await page.click('#live-start');
   await page.waitForFunction(()=>!document.querySelector('#live-send').disabled);
-  assert.equal(await page.inputValue('#live-key'),'');
+  assert.equal(await page.locator('#live-key').count(),0);
+  assert.ok(await page.evaluate(()=>window.testLive.urls.every(url=>url.includes('BidiGenerateContentConstrained')&&!url.includes('?key='))));
   await page.waitForFunction(()=>window.testLive.sent.some(value=>value.realtimeInput?.audio));
   await page.waitForFunction(()=>document.querySelector('#live-input-status').textContent.includes('Geminiへ送信'));
   await page.locator('#speakerphone').getByRole('button',{name:'マイクをミュート',exact:true}).click();
@@ -68,6 +74,8 @@ async function exercise(page,url,{native=false}={}){
   await page.waitForFunction(()=>window.testLive.sent.some(value=>value.toolResponse?.functionResponses.some(r=>r.id==='after-reconnect')));
   assert.equal(await page.evaluate(()=>window.testLive.sent.flatMap(value=>value.toolResponse?.functionResponses||[]).find(r=>r.id==='after-reconnect').response.result.status),'blocked');
   assert.ok(requests.every(value=>!value.includes('fixture-key-not-real')),'API key must never enter local HTTP commands');
+  assert.ok(requests.every(value=>!value.includes('auth_tokens/')&&!value.includes('"apiKey"')),'Browser posts must not echo credentials');
+  assert.equal(await page.evaluate(()=>JSON.stringify({local:{...localStorage},session:{...sessionStorage}}).includes('auth_tokens/')),false);
   await page.evaluate(()=>window.testLive.socket.deliver({serverContent:{interrupted:true}}));
   assert.equal(await page.locator('#speakerphone').evaluate(p=>p.playing),false);
   await page.click('#live-stop');await page.waitForFunction(()=>!document.querySelector('#speakerphone').active);
@@ -88,10 +96,10 @@ async function delayedPreviousReply(page){
   await page.waitForFunction(()=>document.querySelector('#live-stop').disabled);
   await page.route('**/api/live',intercept);
   try{
-    await page.fill('#live-key','fixture-key-not-real');await page.click('#live-start');
+    await page.click('#live-start');
     await page.waitForFunction(()=>!document.querySelector('#live-send').disabled);await captured;
     await page.click('#live-stop');await page.waitForFunction(()=>document.querySelector('#live-stop').disabled);
-    await page.fill('#live-key','fixture-key-not-real');await page.click('#live-start');
+    await page.click('#live-start');
     await page.waitForFunction(()=>!document.querySelector('#live-send').disabled);
     await held.abort();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     assert.equal(await page.locator('#live-send').isEnabled(),true,'A failed playback notification from the previous session must not close the new session');
@@ -105,11 +113,11 @@ async function microphoneDenied(page){
     navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('Permission denied by system','NotAllowedError');};
   });
   try{
-    await page.fill('#live-key','fixture-key-not-real');await page.click('#live-start');
+    await page.click('#live-start');
     await page.waitForFunction(()=>!document.querySelector('#live-start').disabled);
     await page.waitForTimeout(2200);
     assert.match(await page.locator('#live-status').innerText(),/マイクへのアクセスが拒否/);
-    assert.equal(await page.inputValue('#live-key'),'fixture-key-not-real','A failed microphone preflight must not discard the entered key');
+    assert.equal(await page.locator('#live-key').count(),0);
   }finally{await page.evaluate(()=>{navigator.mediaDevices.getUserMedia=window.originalGetUserMedia;delete window.originalGetUserMedia;});}
 }
 
@@ -119,13 +127,13 @@ async function microphoneDenied(page){
   const bridge={frame:Buffer.alloc(115200),frameId:'fixture',status(){return {displayReady:true,frameId:this.frameId};},state(){return {io:this.status()};},close(){}};
   const body={enabled:true,state:()=>friend.status().body,configuration:()=>[],call:input=>execute(friend,input),async close(){}};
   let url=process.env.GAR_PANEL_URL;
-  if(!url){server=createSimulatorServer({deviceBridge:bridge,bodyController:body});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));url=`http://127.0.0.1:${server.address().port}`;}
+  if(!url){server=createSimulatorServer({deviceBridge:bridge,bodyController:body,liveCredentials:async()=>({ephemeralToken:'auth_tokens/fake-local',model:'gemini-3.8-live',apiVersion:'v1alpha',expiresAt:new Date(Date.now()+1800000).toISOString()})});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));url=`http://127.0.0.1:${server.address().port}`;}
   const browser=await chromium.launch({channel:process.platform==='win32'?'msedge':undefined,headless:true,args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream','--mute-audio']});
   try{
     const page=await browser.newPage({viewport:{width:1100,height:900}});
     await exercise(page,url,{native:!!process.env.GAR_PANEL_URL});
     if(!process.env.GAR_PANEL_URL){await microphoneDenied(page);await delayedPreviousReply(page);}
     fs.mkdirSync('artifacts',{recursive:true});await page.setViewportSize({width:1100,height:900});await page.screenshot({path:process.env.GAR_PANEL_URL?'artifacts/live-vm.png':'artifacts/live-fixture.png',fullPage:true});
-    console.log('PASS: fake Gemini session + browser microphone/speaker + App expression/body tools + stop + private API key + responsive layout');
+    console.log('PASS: fake Gemini session + browser microphone/speaker + App expression/body tools + stop + ephemeral Cloud authentication + responsive layout');
   }finally{await browser.close();if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}}
 })().catch(error=>{console.error(error);process.exitCode=1;});

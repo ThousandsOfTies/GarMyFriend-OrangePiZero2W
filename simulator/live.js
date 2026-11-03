@@ -3,7 +3,7 @@ import {GeminiLive} from '/gar-components/gemini-live.mjs';
 
 // Product wiring only. Gemini protocol is shared; tool semantics live in the App.
 const device=document.querySelector('#speakerphone'),start=document.querySelector('#live-start'),stop=document.querySelector('#live-stop');
-const key=document.querySelector('#live-key'),model=document.querySelector('#live-model'),voice=document.querySelector('#live-voice');
+const voice=document.querySelector('#live-voice');
 const status=document.querySelector('#live-status'),transcript=document.querySelector('#live-transcript'),tool=document.querySelector('#live-tool');
 const text=document.querySelector('#live-text'),send=document.querySelector('#live-send');
 const inputStatus=document.querySelector('#live-input-status');
@@ -11,13 +11,13 @@ let client,session=null,generation=0,heartbeat,busy=false,ready=false,lastLine=n
 let capturedBytes=0,sentBytes=0,lastInputUpdate=0;
 let credentials=null,retryTimer,retryDelay=1000,inputQueue=Promise.resolve(),tailUntil=0,recovering=null;
 async function command(value){
-  const response=await fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value),signal:AbortSignal.timeout(value.action==='tool'?38000:4000)});
+  const response=await fetch('/api/live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value),signal:AbortSignal.timeout(value.action==='tool'?38000:value.action==='credentials'?20000:4000)});
   const result=await response.json();if(!response.ok)throw new Error(result.error||'アプリに接続できません');return result;
 }
-function controls(){start.disabled=busy||!ready;stop.disabled=!busy;key.disabled=busy;model.disabled=busy;voice.disabled=busy;text.disabled=send.disabled=!client?.ready;}
+function controls(){start.disabled=busy||!ready;stop.disabled=!busy;voice.disabled=busy;text.disabled=send.disabled=!client?.ready;}
 document.addEventListener('friend-panel-state',({detail:state})=>{
   ready=state?.live?.ready===true;
-  if(!busy)status.textContent=idleMessage||(!state?'WebPanelとの接続を確認中':ready?'APIキーを入力して会話を始められます':'VM内の共通アプリを待っています');
+  if(!busy)status.textContent=idleMessage||(!state?'WebPanelとの接続を確認中':ready?'会話を始められます':state.live?.authenticationReady===false?'会話の接続設定を確認してください':'VM内の共通アプリを待っています');
   controls();
 });
 async function end(message='停止しました'){
@@ -69,17 +69,20 @@ async function connect(current){
     client.addEventListener('cancel',()=>{if(isCurrent())command({action:'cancel',session:activeSession}).catch(error=>{if(isCurrent())end(error.message);});});
     client.addEventListener('error',()=>{if(isCurrent())reconnect(current);});
     heartbeat=setInterval(()=>{if(isCurrent())command({action:'heartbeat',session:activeSession}).catch(error=>{if(isCurrent())end(error.message);});},3000);
+    status.textContent='会話の接続を準備中';
+    const issued=await command({action:'credentials',session:activeSession});
+    if(!isCurrent())return;
     status.textContent='Gemini Liveへ接続中';
-    await client.connect({apiKey:credentials.apiKey,model:credentials.model||opened.config.model,voice:credentials.voice||opened.config.voice,instruction:opened.config.instruction,tools:opened.config.tools});
+    await client.connect({...issued,voice:credentials.voice||opened.config.voice,instruction:opened.config.instruction,tools:opened.config.tools});
     if(current!==generation)return;retryDelay=1000;status.textContent=device.muted?'接続しました。マイクはミュート中です':'接続しました。今の姿勢を教えてください';controls();
     client.text(opened.config.greeting);
   }catch(error){if(current===generation)await reconnect(current);}
 }
 start.addEventListener('click',async()=>{
-  if(busy)return;if(!key.value.trim()){idleMessage='Gemini APIキーを入力してください';status.textContent=idleMessage;key.focus();return;}
-  const selected={apiKey:key.value.trim(),model:model.value.trim(),voice:voice.value.trim()};idleMessage='';busy=true;const current=++generation;controls();status.textContent='マイクとスピーカーを準備中';
+  if(busy)return;
+  const selected={voice:voice.value.trim()};idleMessage='';busy=true;const current=++generation;controls();status.textContent='マイクとスピーカーを準備中';
   transcript.replaceChildren();lastLine=lastRole=null;tool.textContent='';capturedBytes=sentBytes=lastInputUpdate=0;inputStatus.textContent='音声入力：準備中';
-  try{await device.start();if(current!==generation)return;key.value='';credentials=selected;retryDelay=1000;await connect(current);}
+  try{await device.start();if(current!==generation)return;credentials=selected;retryDelay=1000;await connect(current);}
   catch(error){if(current===generation)await end(error.name==='NotAllowedError'?'マイクへのアクセスが拒否されました。ブラウザとWindowsのマイク許可を確認してください。内蔵ブラウザで使えない場合はEdgeで開いてください。':error.message||'会話を開始できませんでした');}
 });
 stop.addEventListener('click',()=>end());

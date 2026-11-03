@@ -32,6 +32,7 @@ def scp(source,destination):
 def archive():
     STATE.mkdir(parents=True,exist_ok=True)
     items=['product.json','sources/gar-my-friend/application','sources/gar-my-friend/firmware','sources/gar-my-friend/shared','sources/gar-my-friend/tools/build-native.sh','sources/gar-my-friend/tools/body.cjs','sources/gar-my-friend/dependencies/gar-servo-pet/src','scripts/run-face.cjs','simulation','simulator','hardware','infra','tests/vm-parts.py','sources/gar-tools/targets/linux-device/runtime/gc9a01-output','sources/gar-tools/targets/linux-device/runtime/gc9a01-stub','sources/gar-tools/targets/linux-device/runtime/ili9341-stub','sources/gar-tools/targets/linux-device/runtime/i2c-stub','sources/gar-tools/targets/linux-device/runtime/rotary-input','sources/gar-tools/targets/linux-device/runtime/web-bridge','sources/gar-tools/web-simulator/components']
+    items.append('sources/gar-tools/targets/linux-device/runtime/gemini-live/broker.cjs')
     def keep(info):
         parts=Path(info.name).parts
         if '.git' in parts or '__pycache__' in parts or 'node_modules' in parts or info.name.startswith('simulator/gar-components'):return None

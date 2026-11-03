@@ -93,6 +93,17 @@ sudo sh /home/user/gar-live-body-20261103/live-body-session.sh off
 
 ## 構成と再利用部分
 
+2026-11-04、Webシミュレータも同じCloud Runの短期トークン発行を使う構成に揃えました。
+実機の `penguin-orangepi-zero2w` は維持し、別の機器ID `penguin-simulator-virtualbox` を
+登録しています。秘密の機器認証情報はVMの `/home/gar/.config/garmyfriend/live-broker.json`
+（gar所有・0600）に置き、ブラウザへは会話ごとの短期トークンだけを返します。
+シミュレータにもGemini APIキーを入力する必要はありません。
+
+登録用ハッシュのSecret Manager版は2で、stagingの `hometeacher-api-staging-00012-xqk` と
+本番の `hometeacher-api-00052-x84` へ反映しました。APIのソース・モデル・既存の機器登録は
+変更していません。新旧両方の機器認証で本番のトークン取得を確認しています。
+シミュレータの会話手順は [LIVE_PANEL.md](LIVE_PANEL.md) を参照してください。
+
 ```text
 Orange Pi ── 機器専用認証 ── Cloud Run /api/live/token
     │                            │

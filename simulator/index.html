@@ -22,8 +22,8 @@
     <section class="part audio-part" aria-labelledby="audio-title">
       <h2 id="audio-title">声で話しかける</h2>
       <gar-speakerphone id="speakerphone" label="USBスピーカーフォン · PCの音声入出力で代替"></gar-speakerphone>
-      <label class="live-label">Gemini APIキー <small>この接続だけで使用</small><input id="live-key" type="password" autocomplete="off" spellcheck="false" placeholder="APIキーを入力"></label>
-      <details class="live-settings"><summary>接続設定</summary><label class="live-label">モデル<input id="live-model" value="gemini-3.8-live" spellcheck="false"></label><label class="live-label">声<input id="live-voice" value="Puck" spellcheck="false"></label></details>
+      <p class="section-note">APIキーの入力は不要です。そのまま会話を始められます。</p>
+      <details class="live-settings"><summary>声の設定</summary><label class="live-label">声<input id="live-voice" value="Puck" spellcheck="false"></label></details>
       <div class="live-buttons"><button id="live-start" disabled>会話を始める</button><button id="live-stop" disabled>停止</button></div>
       <p id="live-status" role="status">アプリとの接続を確認中</p>
       <p id="live-input-status" class="section-note">音声入力：停止中</p>

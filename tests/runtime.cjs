@@ -8,6 +8,7 @@ const {LiveController}=require('../simulation/live-controller.cjs');
 const {FriendRuntime}=require('../sources/gar-my-friend/application/friend-runtime.cjs');
 const {execute}=require('../sources/gar-my-friend/application/friend-control.cjs');
 const {createGunzip}=require('node:zlib');
+const fakeCredentials=async()=>({ephemeralToken:'auth_tokens/test-only',model:'gemini-3.8-live',apiVersion:'v1alpha',expiresAt:new Date(Date.now()+1800000).toISOString()});
 
 function request(port,route,{method='GET',body,headers={}}={}){
   return new Promise((resolve,reject)=>{
@@ -49,7 +50,7 @@ test('panel relays only driver frames and raw rotary actions, without applicatio
 test('conversation lease isolates tabs, deduplicates tools and clears playback on close',async()=>{
   const friend=new FriendRuntime({servo:{async perform(){return true;}}}),calls=[];
   const body={enabled:true,state:()=>friend.status().body,call:async value=>{calls.push(value);return execute(friend,value);}};
-  const live=new LiveController(body);
+  const live=new LiveController(body,{credentials:fakeCredentials});
   try{
     const opened=await live.handle({action:'open'});
     assert.equal(opened.config.tools.length,4);assert.equal(opened.body.poseConfirmationRequired,true);
@@ -67,7 +68,7 @@ test('conversation lease isolates tabs, deduplicates tools and clears playback o
 
 test('simulator transport shares native pose confirmation and forgets it on a new connection',async()=>{
   const movements=[],friend=new FriendRuntime({servo:{async perform(mode,options){movements.push({mode,options});return true;}}});
-  const body={enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value)},live=new LiveController(body);
+  const body={enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value)},live=new LiveController(body,{credentials:fakeCredentials});
   try{
     const opened=await live.handle({action:'open'}),session=opened.session;
     const tool=(id,name,args)=>live.handle({action:'tool',session,id,name,args,from:'stand'});
@@ -82,6 +83,55 @@ test('simulator transport shares native pose confirmation and forgets it on a ne
     await live.handle({action:'close',session});
     const next=await live.handle({action:'open'});assert.equal(next.body.pose,null);
     assert.equal((await live.handle({action:'tool',session:next.session,id:'new-motion',name:'move_body',args:{mode:'stand'}})).status,'blocked');
+  }finally{await live.dispose();}
+});
+
+test('short-lived credentials require a live lease, are issued once per lease and exclude device secrets',async()=>{
+  const friend=new FriendRuntime({servo:{async perform(){return true;}}});
+  let issued=0;
+  const live=new LiveController({enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value)},
+    {credentials:async()=>({...await fakeCredentials(),ephemeralToken:'auth_tokens/test-'+ ++issued,secret:'private-device-secret'})});
+  try{
+    await assert.rejects(live.handle({action:'credentials',session:'none'}),/ended/);
+    const first=await live.handle({action:'open'});
+    const input={action:'credentials',session:first.session};
+    const [a,b]=await Promise.all([live.handle(input),live.handle(input)]);
+    assert.deepEqual(a,b);assert.equal(issued,1);assert.equal(a.secret,undefined);
+    assert.ok(!JSON.stringify(live.state()).includes('auth_tokens'));
+    await live.handle({action:'close',session:first.session});
+    await assert.rejects(live.handle(input),/ended/);
+    const next=await live.handle({action:'open'});
+    const c=await live.handle({action:'credentials',session:next.session});
+    assert.notEqual(c.ephemeralToken,a.ephemeralToken);assert.equal(issued,2);
+  }finally{await live.dispose();}
+});
+
+test('public tunnels and cross-site pages cannot request Cloud credentials',async t=>{
+  let issued=0;
+  const friend=new FriendRuntime({servo:{async perform(){return true;}}});
+  const body={enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value),async close(){}};
+  const bridge={state:()=>({}),status:()=>({displayReady:true}),close(){}};
+  const server=createSimulatorServer({deviceBridge:bridge,bodyController:body,publicOrigin:'https://simulator.example',liveCredentials:async()=>{++issued;return fakeCredentials();}});
+  server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.shutdown());const port=server.address().port;
+  const post=(value,headers={})=>request(port,'/api/live',{method:'POST',body:JSON.stringify(value),headers:{'Content-Type':'application/json',...headers}});
+  const opened=JSON.parse((await post({action:'open'})).body),input={action:'credentials',session:opened.session};
+  assert.equal((await post(input,{Host:'simulator.example'})).status,403);
+  assert.equal((await post(input,{Origin:'https://untrusted.example'})).status,403);
+  assert.equal((await post(input,{'CF-Ray':'tunnel'})).status,403);
+  assert.equal(issued,0);
+  const response=await post(input);assert.equal(response.status,200);assert.equal(issued,1);
+});
+
+test('closing a conversation aborts credential acquisition and rejects a late token',async()=>{
+  const friend=new FriendRuntime({servo:{async perform(){return true;}}});let finish,seenSignal;
+  const live=new LiveController({enabled:true,state:()=>friend.status().body,call:value=>execute(friend,value)},
+    {credentials:({signal})=>{seenSignal=signal;return new Promise(resolve=>{finish=resolve;});}});
+  try{
+    const opened=await live.handle({action:'open'});
+    const pending=live.handle({action:'credentials',session:opened.session});
+    const rejected=assert.rejects(pending,/ended/);await new Promise(resolve=>setImmediate(resolve));
+    await live.handle({action:'close',session:opened.session});assert.equal(seenSignal.aborted,true);
+    finish(await fakeCredentials());await rejected;assert.equal(live.state().active,false);
   }finally{await live.dispose();}
 });
 

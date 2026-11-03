@@ -49,6 +49,10 @@ gar sim diag --workspace Local/GarMyFriend-OrangePiZero2W --json
 確認し、GARが期待するsnapshotとの一致も検査します。画面表示だけで成功とは判定しません。
 
 会話は実機と同じ姿勢確認から始まります。詳細は[会話の手順](docs/LIVE_PANEL.md)を参照してください。
+APIキー入力も不要です。初回登録済みのシミュレータ用認証情報を使い、会話ごとにCloudから
+短期トークンを取得します。ローカルの `.gar/vm/private/live-broker.json` は所有者だけが
+読めるACLを設定し、GAR deployでVMの非公開設定ディレクトリへ別途配置します。
+認証情報はsnapshotや公開HTTPのファイル配信には含めません。
 
 ## 部品の接続口
 
