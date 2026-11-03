@@ -1,11 +1,5 @@
 Generated with the built-in image_gen tool on 2026-11-03.
 Output: docs/images/garmyfriend-concept.png
-Reference: previous bear version of the same image (available in Git history).
+Reference: previous penguin version of the same image (available in Git history).
 
-Use case: precise-object-edit. Asset type: README product concept illustration for GarMyFriend.
-Edit target: the supplied existing bear robot concept image.
-Primary request: turn the friendly bear character into an adorable soft penguin robot. Keep the original high quality product-concept illustration, warm ivory studio background, overall page composition, lighting, main robot size, rounded body proportions, circular LCD bezel, small internal robot, detachable cover diagram, and three emotion samples.
-Change the plush cover from cream bear fur with round ears to soft short charcoal-blue penguin plush, with NO external ears, a creamy white belly/front, small rounded flipper-like arms, and warm muted orange feet. Preserve the overall limb arrangement and internal mechanical illustration instead of inventing a new mechanism.
-LCD face in EVERY location: dark slate-blue background (#202c3b), large warm ivory face mask shaped like two rounded connected lobes with a shallow dark V between them at the top, friendly black oval eyes with tiny white gleams, a SMALL ORANGE BEAK instead of a bear's dark nose and separate smile. The beak should be a compact rounded diamond/oval centered below the eyes, with a subtle dark smiling seam. Rosy cheeks are subtle. Keep the center of the face white; dark framing remains visible around it. Three emotion samples: normal, sleepy closed eyes, surprised open beak. Apply this penguin face consistently to main robot, exposed robot, and sample faces.
-Keep the Japanese labels exactly readable: 「円形ディスプレイ」「ぬいぐるみカバー」「小型ロボット」 with their existing callout lines. Keep dashed arrows and the detached-cover inset layout. The detached head cover must also have no bear ears, dark penguin plush and a circular screen opening.
-No new captions, titles, branding or watermark. This is a concept illustration, not a photograph of a finished physical robot.
+undefined
