@@ -26,7 +26,7 @@ encoder行を外し、読み取りプログラムを起動しない構成へ修�
 音声取得そのものを停止するにはサービスを停止するかUSB機器を外します。
 USBスピーカーのALSA音量は初回に0だったため、30%へ変更しました。実際に聞こえる音量は利用者が確認します。
 
-今回の自動起動は会話・表情・口パクだけです。身体の自動操作は有効にしていません。
+通常の自動起動は会話・表情・口パクだけです。身体の自動操作は有効にしていません。
 接続やトークンの期限切れ時には新しいトークンを取得し、最大60秒の間隔で再接続します。
 再接続では会話は新しいセッションになります。マイクの消音はUSB機器側のボタンで操作します。
 身体を明示的に有効にしたCLIセッションは、切断後の開始姿勢の再確認を必要とします。
@@ -43,6 +43,34 @@ USBスピーカーのALSA音量は初回に0だったため、30%へ変更しま
 故障・未接続など未確認の理由を作ったりしません。有効時も登録済みの動作だけを使い、
 実行結果を確認して応答します。移動距離や動作後の姿勢を実測したとは説明しません。
 指示文の更新そのものでは、実機の身体操作を有効にしません。
+
+## 現在の会話でサーボを使う
+
+2026-11-03、利用者が立ち姿勢とサーボの配線・電源接続を確認した後、
+現在の会話セッションだけ身体操作を有効にしました。利用者が実機へ「伏せて」と
+話しかけ、実際に伏せることを確認済みです。「立って」で立ち姿勢へ戻せます。
+前進・後進は約4秒の脚振り1周期で、連続歩行や移動距離の保証はありません。
+
+Productの [live-body-session.sh](../infra/orangepi-zero2w/live-body-session.sh) が、
+動作確認済みのCSVを `/run/garmyfriend-live-body/` へ複製してservo行だけを有効にします。
+校正値・動作列は変更しません。サービスにI2Cアクセス権と書き込み用の一時領域を追加し、
+`GAR_FRIEND_LIVE_BODY=1` と、利用者が確認した `GAR_FRIEND_START_POSE=stand` を渡します。
+有効化処理自体は動作命令を送りません。
+
+設定は `/run/systemd/system/garmyfriend.service.d/90-live-body-session.conf` に置き、
+自動再起動は無効にしています。開始姿勢の確認ファイルは起動時に一度だけ消費します。
+接続終了後に同じ設定で起動し直すことはできず、新しく実物の姿勢を確認して有効化します。
+再起動すると一時設定は消え、従来の会話・表情だけの自動起動へ戻ります。
+
+Orange Piへ転送済みのスクリプトで身体操作を終了する場合：
+
+```sh
+sudo sh /home/user/gar-live-body-20261103/live-body-session.sh off
+```
+
+再有効化では、身体操作を終了したうえで実物の姿勢を確認してから、同じスクリプトへ
+`stand`（立ち姿勢）または `lie`（伏せ姿勢）を指定します。接続が切れた後の姿勢を
+コマンド履歴だけで決めたり、以前の開始姿勢をそのまま使ったりしません。
 
 ## 構成と再利用部分
 
@@ -88,6 +116,7 @@ WebPanelの認証・入力部品はこの変更では追加していません。
 | 起動サービス | `garmyfriend.service`（従来のサービスを維持） |
 | Live用drop-in | `/etc/systemd/system/garmyfriend.service.d/60-live-broker.conf` |
 | USBマイク単独操作用drop-in | `/etc/systemd/system/garmyfriend.service.d/70-usb-microphone.conf` |
+| 現在の身体操作用の一時drop-in | `/run/systemd/system/garmyfriend.service.d/90-live-body-session.conf` |
 | 機器専用プロフィール | `/etc/garmyfriend/live-broker.json`（garmyfriend所有・0600） |
 | 現在のリリース | `/opt/garmyfriend/releases/arm64-live-body-prompt-20261103` |
 | プロンプト更新前のリリース | `/opt/garmyfriend/releases/arm64-live-speaker-cue-20261103` |
@@ -119,4 +148,10 @@ USB音声には `TSK95K` を指定しています。
   本番は `hometeacher-api-00051-z58`、APIコミットは `dca1eb81b352cbf052e0385c44c0d3393bb5b598`。
 - 同日、新しい会話指示を実機へ反映。適用した2ファイルのSHA-256一致、サービスの
   `active/running`・再起動回数0、`ready` → `listening` → `speaking` とLCD描画の継続を確認。
-  `GAR_FRIEND_LIVE_BODY=0` を保ち、サーボ設定・音声の合図音・配線CSVは変更していません。
+  このプロンプト更新時点では `GAR_FRIEND_LIVE_BODY=0` を保ち、サーボ設定・音声の合図音・配線CSVは変更していません。
+- その後、利用者の開始姿勢確認を受け、現在の会話だけ身体操作を有効化。
+  PCA9685を読み取りで確認し、4サーボの校正・有限動作データを検証。初回の読み取りに
+  一時的な通信エラーが出たため再確認し、続く3回の読み取りは成功しました。
+  有効化後はアプリの状態で `body.ready=true`、サービスの `active/running` と
+  再起動回数0、`GAR_FRIEND_LIVE_BODY=1`、開始姿勢 `stand` を確認。
+  利用者が音声で「伏せて」と指示し、実際に伏せたことを確認しました。
