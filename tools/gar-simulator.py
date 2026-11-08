@@ -20,6 +20,7 @@ def remote(script):
 
 
 def build():
+    vm.ensure_running()
     source = vm.archive()
     tag = uuid.uuid4().hex
     work = '/home/gar/.gar-myfriend-build/' + tag
@@ -97,6 +98,7 @@ printf 'Snapshot placed; services are stopped. Run gar sim start.\\n'
 
 
 def start():
+    vm.ensure_running()
     print(remote(f'''set -eu
 cd {REMOTE}
 test -f .gar/build-id

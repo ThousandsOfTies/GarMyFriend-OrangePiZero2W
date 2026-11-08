@@ -29,6 +29,16 @@ def ssh(command,capture=False):
 def scp(source,destination):
     run(['scp','-i',STATE/'id_ed25519','-P','2231','-o','BatchMode=yes','-o','IdentitiesOnly=yes','-o','StrictHostKeyChecking=yes','-o',f'UserKnownHostsFile={STATE / "known_hosts"}',source,'gar@127.0.0.1:'+destination])
 
+def ensure_running():
+    """Start the selected simulator headlessly and wait for its pinned SSH route."""
+    info=run([VBOX,'showvminfo',NAME,'--machinereadable'],capture=True).stdout
+    if 'VMState="running"' not in info:run([VBOX,'startvm',NAME,'--type','headless'],capture=True)
+    deadline=time.monotonic()+90
+    while time.monotonic()<deadline:
+        if run([*SSH,'true'],capture=True,check=False).returncode==0:return
+        time.sleep(.5)
+    raise RuntimeError('The simulator VM did not become reachable through its configured SSH route')
+
 def archive():
     STATE.mkdir(parents=True,exist_ok=True)
     items=['product.json','sources/gar-my-friend/application','sources/gar-my-friend/firmware','sources/gar-my-friend/shared','sources/gar-my-friend/tools/build-native.sh','sources/gar-my-friend/tools/body.cjs','sources/gar-my-friend/dependencies/gar-servo-pet/src','scripts/run-face.cjs','simulation','simulator','hardware','infra','tests/vm-parts.py','sources/gar-tools/targets/linux-device/runtime/gc9a01-output','sources/gar-tools/targets/linux-device/runtime/gc9a01-stub','sources/gar-tools/targets/linux-device/runtime/ili9341-stub','sources/gar-tools/targets/linux-device/runtime/i2c-stub','sources/gar-tools/targets/linux-device/runtime/rotary-input','sources/gar-tools/targets/linux-device/runtime/web-bridge','sources/gar-tools/web-simulator/components']

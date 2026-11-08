@@ -217,3 +217,45 @@ Wi-Fiも自動接続しています。これで今回の音量リセットにつ
 一時的なNode診断ポートは閉じていることを実機から確認しています。
 記録は時刻・件数・ツール名・再生状態だけです。テキストの一致比較は実機メモリ内で行い、
 文章・音声・キー・トークンは診断結果に含めません。
+
+### 2026-11-08: 連続返答への対策とシミュレータ確認
+
+Appの表情・状態取得・身体操作・姿勢確認に `behavior: 'BLOCKING'` を明示しました。
+必要な操作が終わってから結果をまとめて一度伝える指示も共通プロンプトへ追加しました。
+共通 `GeminiLive` は同一要求のツール結果をまとめて返信し、同じ呼出IDについて
+実行・結果送信を一度だけ行います。取消や切断後の結果を返さず、同じ要求に残った
+有効な結果は、取り消した処理の終了を待たずに返します。
+
+利用者の指定により、今回は**シミュレータで確認し、実機への更新は保留**しました。
+実機向けには既存リリースの会話スクリプト4件だけを更新する配布物とGARの
+`target update --phase build/preflight/deploy/diag` を準備しましたが、配置は実行していません。
+この更新経路は標準の全ネイティブビルドとは別で、既存のバイナリー・配線・秘密設定を継承し、
+更新前ハッシュ照合、Node検査、失敗時のリリース復元、更新後のハッシュ・PID照合を行います。
+
+確認した経路は次のとおりです。
+
+`通常のWebPanelテキスト入力 → 実GeminiLive/Cloud broker → GoogleのGemini 3.8 Live →
+Appツール → LiveController → VM内の共通FriendConversation → ネイティブ制御 → CUSE I2C/PCA9685`
+
+返答のPCMは通常のWeb Audio再生経路を通しました。テストではマイクを無音WAVに置き換え、
+PC側の再生をミュートしています。Googleへの接続・認証・モデル・Appツール・身体制御は実際の経路です。
+物理USB機器・ALSA・音響的な回り込みは、この比較では検証していません。
+
+- GAR `sim build` / `deploy` / `start` / `diag` が成功。
+  稼働build IDは `20261108T104529159595Z-22e160c8` と一致し、スナップショットのハッシュを確認しました。
+- `tests/live-cloud.cjs` による実Gemini確認: 接続1件、全4ツールBLOCKING、
+  姿勢の申告・確認と「伏せてください」のそれぞれで音声返答の生成が1回。
+  `confirm_body_pose=confirmed` / `move_body=completed`、仮想PWMの出力からFULL_OFFへの終了、結果再送0件を確認。
+- Appテスト43件（42通過、Windowsローカルソケット1件skip）、共通部品テスト17件、
+  Productの制御経路8件、ブラウザの会話fixture、更新処理5件、GAR対象テスト16件が通過しました。
+- GAR全体チェックは既存のWindows listener/tunnelテスト1件と、今回変更していないファイルの
+  lint/format検査が失敗しました。全体649件中9件skipで、今回の対象テストは通過しています。
+
+実Geminiテストは明示的な実行だけでCloud接続します。文章・音声・トークンを結果ファイルへ保存せず、
+件数・ツール状態・結果再送数のみを `.gar/tests/live-cloud-result.json` へ記録します。
+
+```powershell
+$env:GAR_LIVE_INTEGRATION='1'
+node tests/live-cloud.cjs
+Remove-Item Env:GAR_LIVE_INTEGRATION
+```
