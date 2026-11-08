@@ -1,0 +1,13 @@
+Generated with the built-in image_gen tool on 2026-11-03.
+Output: docs/images/garmyfriend-concept.png
+Reference: previous penguin version of the same image (available in Git history).
+
+Use case: precise-object-edit.
+Asset type: GarMyFriend README product concept illustration.
+Edit target: the supplied long-torso penguin robot image.
+Primary request: give the penguin a LITTLE MORE LEG so it looks capable of taking steps. Keep the long, plump torso and short-legged identity, but the current legs are almost entirely hidden and the belly is touching the floor.
+Change ONLY the body-to-leg proportion, and update the matching internal robot and cover diagrams consistently. Raise the lower edge of the belly enough to reveal TWO distinct short charcoal-blue legs between the torso and the orange feet. The legs need visible short shins/ankle sections and a clear gap between them. Keep the orange feet a little forward of the shins, resting flat on the ground. Leave a plainly visible ground clearance under the belly, enough space for one foot to move forward in a waddling step. Do not make the animal stand directly on two foot pads attached to its belly.
+Target proportions: head roughly 32–35% of total height, elongated oval torso roughly 48–52%, and visible legs INCLUDING feet about 15–18%. In the large left character, show about 80–110 pixels of dark leg above the orange feet; the feet should have their own visible thickness of about 35–45 pixels. Keep the overall main character the same total size on the page by slightly shortening the bottom of the torso. Keep the feet and legs short and cute, clearly shorter than a humanoid robot's legs.
+The exposed small internal robot must also have TWO visibly articulated short legs below its elongated torso, with discernible hip/short shin/ankle separation and room to swing a foot. Do not leave its shoes bolted directly to the bottom of the torso. Adjust the separate foot covers to have small short sleeves matching the legs.
+Keep all other elements consistent with the reference: same adorable penguin face on the circular LCD, double-lobed warm ivory mask, dark slate-blue framing, black oval eyes with highlights, orange beak, rosy cheeks, charcoal-blue plush, ivory belly, short flipper arms, warm ivory studio background, soft lighting, materials, and page layout. Keep the three emotion closeups unchanged. Preserve the Japanese callout labels exactly: 「円形ディスプレイ」「ぬいぐるみカバー」「小型ロボット」, and keep dashed arrows.
+Avoid long humanoid legs, an extremely stubby foot-pad-only design, floor-dragging belly, changing the face design, new captions or watermark.

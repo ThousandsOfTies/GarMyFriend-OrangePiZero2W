@@ -1,0 +1,2 @@
+name,bus,dev,address,driver,sim,description
+pca9685-1,10,/dev/i2c-10,0x40,pca9685,pca9685,Dedicated virtual PCA9685; never a physical board bus

@@ -16,8 +16,19 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - name: Check independent audio and Gemini Live protocol
+        run: node --test sources/gar-tools/web-simulator/tests/audio-live.test.mjs
+      - name: Check shared ALSA adapter without physical audio devices
+        run: node --test sources/gar-tools/targets/linux-device/runtime/alsa-audio/audio.test.cjs tests/linux-audio.cjs tests/native-live.cjs
+      - name: Check native servo limits and interruption
+        run: make -C sources/gar-my-friend/dependencies/gar-servo-pet check
+      - run: npm run test:composition
+      - run: python3 -m unittest discover -s sources/gar-tools/tests -p test_product_composition.py -v
+      - run: python3 -m unittest discover -s sources/board-orangepi-zero2w/tests -v
       - name: Build the fixed ARM64 target
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           sh infra/orangepi-zero2w/build.sh
+          python3 tools/product.py package --output artifacts/ci-target
+          sh -n artifacts/ci-target/files/app/run artifacts/ci-target/files/app/configure-target artifacts/ci-target/files/app/install

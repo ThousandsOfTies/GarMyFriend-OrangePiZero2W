@@ -4,3 +4,6 @@
 [submodule "sources/gar-my-friend"]
 	path = sources/gar-my-friend
 	url = https://github.com/ThousandsOfTies/gar-my-friend.git
+[submodule "sources/board-orangepi-zero2w"]
+	path = sources/board-orangepi-zero2w
+	url = https://github.com/ThousandsOfTies/gar-board-orangepi-zero2w.git

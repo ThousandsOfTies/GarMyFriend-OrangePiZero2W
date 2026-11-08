@@ -1,0 +1,17 @@
+mode,frame,step_ms,hold_ms,front-left,front-right,rear-left,rear-right
+stand,0,800,300,0,0,0,0
+stand,1,800,300,0,0,0,0
+lie,0,800,300,0,0,0,0
+lie,1,800,300,1000,1000,-1000,-1000
+forward,0,800,0,0,0,0,0
+forward,1,800,0,1000,0,-1000,0
+forward,2,800,0,0,1000,0,-1000
+forward,3,800,0,-1000,0,1000,0
+forward,4,800,0,0,-1000,0,1000
+forward,5,800,0,0,0,0,0
+backward,0,800,0,0,0,0,0
+backward,1,800,0,0,-1000,0,1000
+backward,2,800,0,-1000,0,1000,0
+backward,3,800,0,0,1000,0,-1000
+backward,4,800,0,1000,0,-1000,0
+backward,5,800,0,0,0,0,0

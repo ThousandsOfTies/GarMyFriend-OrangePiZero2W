@@ -28,7 +28,10 @@
 液晶のSDAはSPIのデータ入力です。I²C端子には接続しません。
 BL端子は今回のモジュールに申告されていないため、追加配線を作りません。
 
-## KY-040
+## KY-040（現在は未接続）
+
+2026-11-03に利用者が未接続と確認しました。以下は任意で追加する際の配線参考です。
+現在の実機用 `orangepi-zero2w/gpio.csv` にencoder行はなく、会話操作には使いません。
 
 | KY-040の端子 | 物理ピン | Orange Pi信号 |
 | --- | --- | --- |
@@ -54,3 +57,10 @@ CLK・DT・SWをプルアップ入力として使います。内蔵抵抗の有�
 信号ピンはすべて重複のない割り当てです。物理3/5のI²C1と8/10のUART0は今回使いません。
 
 参照: [Orange Pi公式wiringOP](https://github.com/orangepi-xunlong/wiringOP/blob/a7921ca2f5c124203be10d3418db70a2e15f3c10/wiringPi/wiringPi.c#L1873)、[Joy-IT KY-040](https://sensorkit.joy-it.net/en/sensors/ky-040)。
+
+## KY-040のGPIO入力デバウンス
+
+`orangepi-zero2w/gpio.csv`のCLK・DT・SWに`debounce_us=1000`を明示します。
+共通アプリがGPIOを要求する際、共有読取の`--debounce-us 1000`を通してOSへ設定します。
+列の省略・0は従来の入力設定を保ちます。1ミリ秒は要求値で、実効時間はカーネルに依存します。
+今回の変更は設定の追加と静的・ソフトウェア検証です。Orange Pi実機での追従性は未確認です。

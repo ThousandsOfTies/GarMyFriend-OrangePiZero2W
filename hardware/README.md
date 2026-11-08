@@ -8,7 +8,7 @@
 | `connections.csv` | 実機の物理配線計画。source_pinはOrange Pi Zero 2Wの40ピンヘッダー番号、target_pinは部品の印字 |
 | `gpio.csv` | 現在動かすVMのGPIO chip・line・方向・プルアップ |
 | `spi.csv` | 現在動かすVMのSPI device・bus・CS・mode・速度 |
-| `orangepi-zero2w/gpio.csv`・`spi.csv` | 実機で確認したコントローラーに対する割り当て。GPIOリセットとノブの内部プルアップを含む |
+| `orangepi-zero2w/gpio.csv`・`spi.csv` | 現在の実機LCDの割り当て。GPIOリセットを含む。KY-040は未接続のためencoder行を置かない |
 
 列名はGARの `gar hw init` と同じものです。`i2c.csv` / `video.csv` は使う装置がないため置いていません。GARの読込は未配置のCSVを空として扱います。
 
