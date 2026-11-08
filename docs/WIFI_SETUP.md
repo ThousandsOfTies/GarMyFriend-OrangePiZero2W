@@ -46,7 +46,8 @@ gar target wifi --workspace Local/GarMyFriend-OrangePiZero2W --transport ssh --c
   確認用URLの404は到達確認であり、API認証の成功を意味しません。
 - 既存アプリは再導入せずPID535・再起動回数0のまま、実際のGemini Liveへ再接続し、
   `ready` → `speaking` → `listening` を確認。
-- 無線をdown/upした後も外部通信が復旧しました。SBC本体の再起動試験は未実施です。
+- 無線をdown/upした後も外部通信が復旧しました。さらに利用者の電源再投入後にも
+  Wi-Fi自動接続とGemini接続を確認しました（音量の保存・復元修正後は返事の実音も確認済み）。
 - Wi-Fiの設定はroot/0600、USBの `.network` はroot/0644で保存されています。
   最初の処理ではUSB設定にも0600を適用して管理接続が切れたため、権限を修正し、
   保存済みホスト鍵で実機を照合したWi-Fi側の認証経路から復旧しました。
@@ -57,4 +58,5 @@ gar target wifi --workspace Local/GarMyFriend-OrangePiZero2W --transport ssh --c
 - 利用者がWi-Fi経由で話しかけた内容への返事を確認しました。
   USBスピーカーマイクの挿し直しだけでは聞こえず、再接続待ちが明けた後、
   PCM出力を以前の30%へ戻すと返事が聞こえる状態になりました。
-  音声機器の起動時初期状態の問題を恒久的に直したとはしていません。
+  続いて音量の保存とUSB認識時の復元を設定し、利用者の電源再投入後にも返事が聞こえることを確認しました。
+  詳細は [USB音声の記録](USB_AUDIO.md) を参照してください。
