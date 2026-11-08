@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "entrypoint": "tools/target-probe.py",
+  "probes": ["status", "audio-status", "speaker-test", "restore-speaker", "network-status"]
+}
