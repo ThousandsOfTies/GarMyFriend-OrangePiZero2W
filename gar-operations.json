@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "operations": {
+    "audio": {
+      "description": "実機の音量保存とUSB接続時の復元を設定",
+      "entrypoint": "tools/target-audio.py",
+      "timeout_seconds": 900,
+      "result_fields": ["ok", "state", "error", "saved", "restoreVerified", "hotplugRule", "card", "playbackPercent"]
+    },
+    "wifi": {
+      "description": "実機のWi-Fi自動接続を設定",
+      "entrypoint": "tools/target-wifi.py",
+      "timeout_seconds": 900,
+      "result_fields": ["ok", "state", "error", "address", "interface", "internet", "reconnected", "usbManagementOnly", "preflight"]
+    },
+    "trace": {
+      "description": "実行中の会話の送受信順を一時観測",
+      "entrypoint": "tools/target-trace.py",
+      "timeout_seconds": 900,
+      "result_fields": ["ok", "state", "error", "trace"]
+    },
+    "update": {
+      "description": "会話スクリプトの更新を作成・検証・配置・診断",
+      "entrypoint": "tools/target-update.py",
+      "timeout_seconds": 900,
+      "result_fields": ["ok", "state", "error", "deployment", "preflight"]
+    },
+    "probe": {
+      "description": "実機の音声・ネットワーク状態を診断（--probeで選択）",
+      "entrypoint": "tools/target-probe.py",
+      "timeout_seconds": 90,
+      "result_fields": ["ok", "error", "probe", "verification", "action", "card", "mixer", "capture", "processes", "service", "events", "persistence", "audioProcesses", "boot", "applicationUnits", "conversationProcesses", "liveOptions", "liveTlsTransports", "liveInspectorListening", "restore", "tone", "sshExit", "interface", "addresses", "defaultRoutes", "dns", "https", "configuration", "usbConfiguration", "internet", "usbManagementOnly", "preflight"]
+    }
+  },
+  "aliases": {
+    "target audio": "audio",
+    "target wifi": "wifi",
+    "target trace": "trace",
+    "target update": "update",
+    "target probe": "probe"
+  }
+}

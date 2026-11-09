@@ -4,6 +4,8 @@
 このProductは **アプリ + gar-tools + 基板定義** の3つをsubmoduleで組み合わせます。
 組み立て指定は[product.json](product.json)、所有範囲と生成物は[構成の説明](docs/COMPOSITION.md)で確認できます。
 `npm run compose`で現在選んでいる部品と版を表示します。
+Product固有の診断・設定操作は [gar-operations.json](gar-operations.json) に定義し、
+`gar product list` / `gar product run` で呼び出します。[操作とAliasの追加方法](docs/OPERATIONS.md)
 
 
 丸い顔で表情を伝える、胴が長く脚が短いペンギンのぬいぐるみロボットを作るプロジェクトです。円形ディスプレイに白い顔模様とオレンジのくちばしを描き、小型ロボットの本体にぬいぐるみのカバーをかぶせます。将来は手足を動かし、脚で歩けるようにしていく構想です。

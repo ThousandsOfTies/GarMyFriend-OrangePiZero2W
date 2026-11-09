@@ -1,5 +1,6 @@
 """Product bindings for bounded, reusable Linux USB-audio diagnosis."""
 
+import argparse
 import base64
 import json
 import shlex
@@ -8,8 +9,22 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-action = sys.argv[1]
-connection = json.loads((ROOT / ".gar/network/connection.json").read_text(encoding="utf-8"))
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    "--probe",
+    default="status",
+    choices=[
+        "status",
+        "audio-status",
+        "speaker-test",
+        "restore-speaker",
+        "network-status",
+    ],
+)
+action = parser.parse_args().probe
+connection = json.loads(
+    (ROOT / ".gar/network/connection.json").read_text(encoding="utf-8")
+)
 directory = ROOT / ".gar/network"
 source = ROOT / "sources/gar-tools/targets/linux-device/runtime/alsa-audio/probe.py"
 settings = {
@@ -26,7 +41,11 @@ if action == "network-status":
         "usbNetworkFile": "/etc/systemd/network/00-gar-usb-link.network",
     }
 program = base64.b64encode(source.read_bytes()).decode("ascii")
-invocation = "import base64;exec(compile(base64.b64decode(" + repr(program) + '),"<audio-probe>","exec"))'
+invocation = (
+    "import base64;exec(compile(base64.b64decode("
+    + repr(program)
+    + '),"<audio-probe>","exec"))'
+)
 command = shlex.join(["python3", "-c", invocation, json.dumps(settings)])
 result = subprocess.run(
     [
@@ -59,5 +78,6 @@ except ValueError:
         "error": "USB audio probe could not connect or return JSON",
         "sshExit": result.returncode,
     }
+report.update(probe=action, verification="probe_only")
 print(json.dumps(report, ensure_ascii=False))
 sys.exit(0 if result.returncode == 0 and report.get("ok") else 1)

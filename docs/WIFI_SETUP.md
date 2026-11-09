@@ -1,5 +1,8 @@
 # SBCのWi-Fiを会話用の主回線にする
 
+この操作は [Product側の定義](OPERATIONS.md) に移行しました。以下の `gar target wifi` は
+`gar product run wifi` のProduct内Aliasで、GAR本体にWi-Fi専用コマンドはありません。
+
 Orange Piの `wlan0` を自宅ルーターへ直接接続し、USBはPCとの固定IP管理用に使います。
 アプリ・会話モデル・Cloud側の機器認証情報は変更しません。
 

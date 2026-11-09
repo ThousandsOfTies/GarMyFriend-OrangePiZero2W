@@ -1,5 +1,9 @@
 # USBマイク・スピーカーをつなぐ
 
+PCからの追加診断・設定は [gar-operations.json](../gar-operations.json) で管理します。
+本書の `gar target audio/probe/trace/update` は [Product内Alias](OPERATIONS.md) です。
+結果はGAR共通の出力の `result` 内に入り、実機操作の内容と認証手順は従来どおりです。
+
 購入済みの多摩電子 **PR-SK95CK** を想定した準備です。
 2026-11-03、接続中のOrange Pi Zero 2Wで **TSK95K / USB ID `3206:104f`** として認識しました。
 USB HOSTと `snd-usb-audio` が動作し、ALSAにマイク入力・スピーカー出力の両方が現れています。
