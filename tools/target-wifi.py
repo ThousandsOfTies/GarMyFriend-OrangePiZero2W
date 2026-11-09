@@ -12,8 +12,12 @@ parser.add_argument("--transport", choices=("serial", "ssh"), default="ssh")
 parser.add_argument("--check", action="store_true")
 parser.add_argument("--repair-host")
 args = parser.parse_args()
+if args.check and args.transport != "ssh":
+    parser.error("--check requires --transport ssh")
 transport = args.transport
-connection = json.loads((root / ".gar/network/connection.json").read_text(encoding="utf-8"))
+connection = json.loads(
+    (root / ".gar/network/connection.json").read_text(encoding="utf-8")
+)
 settings = {
     "transport": transport,
     "check": args.check,
@@ -30,7 +34,9 @@ settings = {
 }
 if transport == "ssh":
     settings["title"] = "Orange Pi - Wi-Fi setup (SSH)"
-    prior = json.loads((root / ".gar/network/windows-result.json").read_text(encoding="utf-8-sig"))
+    prior = json.loads(
+        (root / ".gar/network/windows-result.json").read_text(encoding="utf-8-sig")
+    )
     settings.update(
         sshHost=connection["host"],
         sshUser=connection["user"],

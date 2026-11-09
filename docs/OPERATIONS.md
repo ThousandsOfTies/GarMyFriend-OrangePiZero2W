@@ -20,7 +20,7 @@ gar product run probe --workspace Local/GarMyFriend-OrangePiZero2W --json -- --p
 AliasはProduct内だけで有効です。別のProductは同じAliasを別の処理に割り当てられます。
 GAR標準の `target build` や `sim start` の上書きは拒否します。
 一覧・検証は実機に接続しません。`--` 以降の引数をそのままProductへ渡します。
-各操作の引数は `gar product run 操作名 -- --help` で確認できます。
+各操作の引数は `gar product help 操作名` で確認できます。
 
 ## 新しい操作を追加する例
 
@@ -53,3 +53,5 @@ cameraは追加方法の例で、この変更でカメラ機能や実機操作�
 タイムアウト、終了値、標準操作の保護、未宣言の結果項目の除外をGAR側で検証しています。
 このProductでは定義検証、各操作のhelp、スクリプト更新のローカルbuildを確認しました。
 この移行の検証に実機への接続・書き込み・サービス再起動は含めません。
+
+ヘルプは専用入口から表示します。通常のrunではProductの `-h` などの引数をGARが特別扱いしません。Python専用環境は定義の `python` にProduct内の実行ファイルを指定できます。
